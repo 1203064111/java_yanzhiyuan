@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.SettingDao">
+
+	<insert id="insertAdvice" parameterType="adviceBean">
+		insert into tst_advice
+		(member_id,member_account,advice_desc,advice_contact,create_time,update_time)
+		values
+		(#{member_id},#{member_account},#{advice_desc},#{advice_contact},now(),now())
+	</insert>
+
+	<select id="getHtmlDetail" parameterType="htmlBean" resultType="htmlBean">
+		select * from tst_system_html
+		where is_delete='0' and html_id=#{html_id}
+	</select>
+	
+	<select id="getHtmls" parameterType="htmlBean" resultType="htmlBean">
+		select html_id,html_name from tst_system_html
+		where is_delete='0'
+		<if test=" type !=null and type != '' " >
+	   	and type=#{type}
+	   </if>
+	</select>
+	
+	<select id="getCodeBeanByMobile" parameterType="codeBean" resultType="codeBean">
+		select * from tst_verification_code where mobile=#{mobile} and code_type=#{code_type} 
+		and effective_time>#{create_time} and is_delete='0'
+		LIMIT 0,1
+	</select>
+	<select id="getCodeBeanByMobileAndCode" parameterType="codeBean" resultType="codeBean">
+		select * from tst_verification_code where mobile=#{mobile} and code=#{code} 
+		and code_type=#{code_type} and effective_time>#{create_time} and is_delete='0'
+		LIMIT 0,1
+	</select>
+	
+	<insert id="insertCode" parameterType="codeBean">
+		insert into tst_verification_code 
+		(mobile,code,code_type,code_desc,create_time,effective_time)
+		values(#{mobile},#{code},#{code_type},#{code_desc},#{create_time},#{effective_time})
+	</insert>
+	<update id="deleteCode" parameterType="codeBean">
+		update tst_verification_code set is_delete='1' where code_id=#{code_id}
+	</update>
+	
+	<update id="deleteCodeByMobileAndCode" parameterType="codeBean">
+		update tst_verification_code set is_delete='1' where mobile=#{mobile} and code=#{code}
+	</update>
+	<select id="getMsgType" parameterType="msgTypeBean" resultType="msgTypeBean">
+	   select * from tst_msg_type
+	   where 1=1  and is_delete='0'
+	   <if test="msg_type!=null and msg_type!=''" >
+	   and msg_type=#{msg_type}
+	   </if>
+	</select>
+</mapper>

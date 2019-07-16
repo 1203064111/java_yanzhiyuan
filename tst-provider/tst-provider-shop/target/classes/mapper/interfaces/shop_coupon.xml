@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.ShopCouponDao">
+
+	<update id="timeingCouponExpire" parameterType="shopCouponBean">
+		update tst_member_coupon 
+		set update_time=now(),member_coupon_state='3'
+		where now()>coupon_end_time and member_coupon_state='1'
+	</update>
+
+	<select id="getNewCoupons" parameterType="shopMemberCouponBean" resultType="shopCouponBean">
+		SELECT * FROM tst_goods_coupon as a
+		where a.is_delete='0' and a.display_type='3' and now()>a.receive_start_time and a.receive_end_time>now()
+		and (a.issue_type='1' or (a.issue_type='2' and a.issue_num>a.take_num))
+	</select>
+	
+	
+	
+	<select id="getWeekSignCoupons" parameterType="shopCouponSignBean" resultType="Map">
+			select a.*,(case when b.sign_id is null then 0 else 1 end)as is_sign from(
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-1), '%Y-%m-%d') as sign_time
+		union 
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-2), '%Y-%m-%d') as sign_time
+		union 
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-3), '%Y-%m-%d') as sign_time
+		union 
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-4), '%Y-%m-%d') as sign_time
+		union 
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-5), '%Y-%m-%d') as sign_time
+		union 
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-6), '%Y-%m-%d') as sign_time
+		union 
+		SELECT DATE_FORMAT( SUBDATE(CURDATE(),DATE_FORMAT(CURDATE(),'%w')-7), '%Y-%m-%d') as sign_time
+		) as a
+		left join tst_goods_coupon_sign as b
+		on a.sign_time=left(b.sign_time,10)
+		and b.member_id=#{member_id}
+		order by sign_time asc
+	</select>
+	
+	<select id="getRandSignCoupon" parameterType="shopCouponSignBean" resultType="shopCouponBean">
+		SELECT * FROM tst_goods_coupon as a
+		where a.is_delete='0' and a.display_type='4' and now()>a.receive_start_time and a.receive_end_time>now()
+		and (a.issue_type='1' or (a.issue_type='2' and a.issue_num>a.take_num))
+		ORDER BY RAND() LIMIT 1
+	</select>
+	
+	<select id="getCouponSignDetail" parameterType="shopCouponSignBean" resultType="shopCouponSignBean">
+		select * from tst_goods_coupon_sign
+		where is_delete='0'
+		<if test=' member_id != null and member_id != "" '>
+			and member_id=#{member_id}
+		</if>
+		<if test=' sign_time != null and sign_time != "" '>
+			and #{sign_time}=left(sign_time,10)
+		</if>
+	</select>
+	
+	<insert id="signCoupon" parameterType="shopCouponSignBean">
+		insert into tst_goods_coupon_sign
+		(member_id,coupon_id,sign_time,
+		create_time,update_time)
+		values
+		(#{member_id},#{coupon_id},now(),
+		now(),now())
+	</insert>
+	
+	<select id="verMemberCoupon" parameterType="shopMemberCouponBean" resultType="shopMemberCouponBean">
+		select * from tst_member_coupon
+		where member_id=#{member_id} and coupon_id=#{coupon_id}
+	</select>
+	
+	<select id="verMemberCouponList" parameterType="shopMemberCouponBean" resultType="shopMemberCouponBean">
+		select * from tst_member_coupon
+		where member_id=#{member_id} and coupon_id=#{coupon_id}
+	</select>
+
+	<select id="getShopCoupons" parameterType="shopMemberCouponBean" resultType="shopCouponBean">
+		select a.* from tst_goods_coupon as a		
+		where a.is_delete=0  and a.coupon_state = '1'
+		and a.remain_num >0
+	</select>
+	
+
+	<select id="getOrderCoupons" parameterType="java.util.HashMap" resultType="shopMemberCouponBean">
+	
+		<!-- 平台全部商品券 -->
+		select a.* from tst_member_coupon as a
+		where a.is_delete='0' and coupon_type='1' and coupon_range='1' and member_coupon_state='1'
+		and ((#{order_price}>coupon_full_price and coupon_way='1') or (#{order_price}>coupon_price and coupon_way='2'))
+		and member_id=#{member_id}
+		
+		<!-- 平台部分商品券 -->
+		
+		union 
+		select a.* from tst_member_coupon as a
+		where a.is_delete='0' and coupon_type='1' and coupon_range='2' and member_coupon_state='1'
+		and member_id=#{member_id}
+    	and (
+    	
+	    	(
+	    		
+	    		(
+		    	<foreach collection="orderGoodsBeans" item="item" index="index" separator="+" >
+					(case when FIND_IN_SET(#{item.goods_id},a.goods_ids) then #{item.goods_actual_price} else 0 end)
+		    	</foreach>
+	    		)>coupon_full_price and coupon_way='1'
+	    	) 
+	    	
+	    	or 
+	    	
+	    	(
+	    	
+	    		(
+		    	<foreach collection="orderGoodsBeans" item="item" index="index" separator="+" >
+					(case when FIND_IN_SET(#{item.goods_id},a.goods_ids) then #{item.goods_actual_price} else 0 end)
+		    	</foreach>
+	    		)>coupon_price and coupon_way='2'
+	    	)
+    	
+    	)
+    	
+    	
+		<!-- 商家全部商品券 -->
+		<foreach collection="orderMerchantsBeans" item="item" index="index" separator="" >
+			union
+		    select a.* from tst_member_coupon as a
+			where a.is_delete='0' and coupon_type='2' and coupon_range='1' and member_coupon_state='1' and merchants_id=#{item.merchants_id}
+			and ((#{item.order_actual_price}>coupon_full_price and coupon_way='1') or (#{item.order_actual_price}>coupon_price and coupon_way='2'))
+			and member_id=#{member_id}
+			
+			
+			<!-- 商家部分商品券 -->
+			union
+			select a.* from tst_member_coupon as a
+			where a.is_delete='0' and coupon_type='2' and coupon_range='2' and member_coupon_state='1' and merchants_id=#{item.merchants_id}
+			and (
+					(
+						(
+					    	<foreach collection="item.orderGoodsBeans" item="item2" index="index" separator="+" >
+								(case when FIND_IN_SET(#{item2.goods_id},a.goods_ids) then #{item2.goods_actual_price} else 0 end)
+					    	</foreach>
+			    		)>coupon_full_price and coupon_way='1'
+		    		) 
+		    		or
+		    		(
+		    		 	(
+					    	<foreach collection="item.orderGoodsBeans" item="item2" index="index" separator="+" >
+								(case when FIND_IN_SET(#{item2.goods_id},a.goods_ids) then #{item2.goods_actual_price} else 0 end)
+					    	</foreach>
+			    		)>coupon_price and coupon_way='2'
+			    	)
+	    		)
+			and member_id=#{member_id}
+    	</foreach>
+    	
+    	
+    	order by coupon_price desc
+	</select>
+
+	<select id="getShopMemberCoupons" parameterType="shopMemberCouponBean" resultType="shopMemberCouponBean">
+		select * from tst_member_coupon
+		where  is_delete=0 and member_id=#{member_id}
+		and member_coupon_state = '1'
+		<if test=' coupon_start_time != null and coupon_start_time != "" '>
+			and now()>coupon_start_time and coupon_end_time>now()
+		</if>
+		<if test=' coupon_full_price != null and coupon_full_price != "" '>
+			and #{coupon_full_price} > coupon_full_price
+		</if>
+		
+		
+		order by coupon_price desc
+	</select>
+
+	<select id="getShopMemberCouponDetail" parameterType="shopMemberCouponBean" resultType="shopMemberCouponBean">
+		select * from tst_member_coupon
+		where member_coupon_id=#{member_coupon_id} and is_delete=0
+	</select>
+	
+	<update id="updateShopMemberCouponDetail" parameterType="shopMemberCouponBean">
+		update tst_member_coupon
+		set update_time=now()
+		<if test=' member_coupon_state != null and member_coupon_state != "" '>
+			,member_coupon_state=#{member_coupon_state}
+		</if>
+		where member_coupon_id=#{member_coupon_id}
+	</update>
+	<update id="updateShopMemberCouponState" parameterType="shopMemberCouponBean">
+		update tst_member_coupon
+		set update_time=now()
+		<if test=' member_coupon_state != null and member_coupon_state != "" '>
+			,member_coupon_state=#{member_coupon_state}
+		</if>
+		where FIND_IN_SET(member_coupon_id,#{member_coupon_id})
+	</update>
+	
+	<update id="updateShopCouponUsedNum" parameterType="shopCouponBean">
+		update tst_goods_coupon
+		set update_time=now()
+		<if test=' used_num != null and used_num != "" '>
+			,used_num=used_num+#{used_num}
+		</if>
+		where coupon_id=#{coupon_id}
+	</update>
+	<update id="updateShopCouponTakeNum" parameterType="shopCouponBean">
+		update tst_goods_coupon
+		set update_time=now()
+		<if test=' take_num != null and take_num != "" '>
+			,take_num=take_num+#{take_num}
+		</if>
+		where coupon_id=#{coupon_id}
+	</update>
+	<update id="updateShopCouponRemainNum" parameterType="shopCouponBean">
+		update tst_goods_coupon
+		set update_time=now()
+		<if test=' remain_num != null and remain_num != "" '>
+			,remain_num=#{remain_num}
+		</if>
+		where coupon_id=#{coupon_id}
+	</update>
+	<select id="getShopCouponDetail" parameterType="shopCouponBean" resultType="shopCouponBean">
+		select * from tst_goods_coupon
+		where 1=1 and is_delete=0
+		and coupon_id=#{coupon_id}
+
+	</select>
+	<insert id="insertMemberCoupon" parameterType="shopMemberCouponBean" useGeneratedKeys="true" keyProperty="member_coupon_id">
+	insert into tst_member_coupon
+	(member_id,coupon_start_time,coupon_end_time,coupon_id
+	,coupon_name
+	,coupon_way,coupon_full_price,coupon_price,
+	percent
+	,create_time,update_time
+	)
+	values
+	(#{member_id},#{coupon_start_time},#{coupon_end_time},#{coupon_id},
+	#{coupon_name},
+	#{coupon_way},#{coupon_full_price},#{coupon_price},
+	#{percent},
+	now(),now()
+	)
+	</insert>
+</mapper>

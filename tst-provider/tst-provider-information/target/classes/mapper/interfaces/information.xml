@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.InformationDao">
+
+	<insert id="insertMemberReport" parameterType="memberReportBean">
+		insert into 
+		tst_member_report(information_id,member_id,report_desc,update_time,create_time)
+		values(
+		#{information_id},#{member_id},#{report_desc},now(),now())
+	</insert>
+	<insert id="insertMemberBlack" parameterType="memberReportBean">
+		insert into 
+		tst_member_black(to_member_id,member_id,update_time,create_time)
+		values(
+		#{to_member_id},#{member_id},now(),now())
+	</insert>
+
+	<select id="getSystemInformationAssessmentsByParent" parameterType="informationAssessmentBean" resultType="informationAssessmentBean">
+		select a.*,b.member_nick_name as member_name,b.member_img as member_img from tst_information_assessment as a
+		inner join tst_member  as b
+		on b.member_id = a.member_id
+		where a.is_delete='0' 
+		<if test=' parent_id != null and parent_id != "" '>
+			and a.parent_id=#{parent_id}
+		</if>
+		
+		group by a.assessment_id desc
+	</select>
+	<select id="getSystemInformationAssessments" parameterType="informationAssessmentBean" resultType="informationAssessmentBean">
+		select a.*,b.member_nick_name as member_name,b.member_img as member_img from tst_information_assessment as a
+		inner join tst_member  as b
+		on b.member_id = a.member_id
+		where a.is_delete='0'  and a.parent_id is  null
+		<if test=' information_id != null and information_id != "" '>
+			and  a.information_id = #{information_id}
+		</if>
+		
+		group by a.assessment_id desc
+	</select>
+	<select id="getInformationClasss" parameterType="informationClassBean" resultType="informationClassBean">
+		select * from tst_information_class
+		where is_delete='0' and class_state='1'
+		order by sort desc
+	</select>
+	
+	<select id="getInformations" parameterType="informationBean" resultType="informationBean">
+		select * from tst_information
+		where is_delete='0' and information_state='1'
+		<if test=' class_id != null and class_id != "" '>
+			and class_id=#{class_id}
+		</if>
+		order by create_time desc
+	</select>
+	
+	<select id="getInformationDetail" parameterType="informationBean" resultType="informationBean">
+		select * from tst_information
+		where information_id=#{information_id} and is_delete='0'
+	</select>
+	
+	<select id="getInformationMarketings" parameterType="informationBean" resultType="informationBean">
+		select * from tst_information
+		where is_delete='0' and information_state='1'
+	</select>
+	<select id="getSystemInformationsByMember" parameterType="systemInformationBean" resultType="systemInformationBean">
+		select a.*,b.hx_account as hx_account,b.member_img as member_img,b.member_nick_name as member_name
+		<if test=' member_id != null and member_id != "" '>
+		,(case when c.relation_id != '' then 1 else 0 end ) as is_good
+		</if>
+		 from tst_system_information as a 
+		inner join tst_member as b 
+		on a.member_id = b.member_id
+		<if test=' member_id != null and member_id != "" '>
+			left join tst_well_relation as c
+			on c.information_id = a.information_id
+			and c.is_delete ='0' 
+			and c.member_id = #{member_id}
+		</if>
+		where a.is_delete='0'
+		<if test=' create_member_id != null and create_member_id != "" '>
+			 and a.member_id=#{create_member_id}
+		</if>
+		group by a.information_id desc
+		
+	</select>
+	<select id="getSystemInformations" parameterType="systemInformationBean" resultType="systemInformationBean">
+		
+		select a.*,b.member_nick_name as member_name, b.member_img as member_img,b.hx_account as hx_account
+		<if test=' member_id != null and member_id != "" '>
+		,(case when c.relation_id != '' then 1 else 0 end ) as is_good
+		</if>
+		from tst_system_information as a 
+		inner join tst_member as b 
+		on a.member_id = b.member_id
+		<if test=' member_id != null and member_id != "" '>
+		left join tst_well_relation as c
+		on c.information_id = a.information_id
+		and c.is_delete ='0' 
+		and c.member_id = #{member_id}
+		</if>
+		where a.is_delete = '0' 
+		
+		<if test=' class_id != null and class_id != "" '>
+			 and a.class_id=#{class_id}
+		</if>
+		
+		<if test=' information_state != null and information_state != "" '>
+			 and a.information_state=#{information_state}
+		</if>
+		<if test=' member_id != null and member_id != "" '>
+		     and  not exists (select 1 from tst_member_black as d where d.to_member_id = a.member_id and d.member_id = #{member_id})
+		</if>
+		group by a.create_time desc
+	</select>
+	<select id="getSystemInformationByOrderId" parameterType="systemInformationBean" resultType="systemInformationBean">
+		
+		select a.*,b.member_nick_name as member_name, b.member_img as member_img,
+		(case when c.relation_id != '' then 1 else 0 end ) as is_good
+		from tst_system_information as a 
+		inner join tst_member as b 
+		on a.member_id = b.member_id
+		left join tst_well_relation as c
+		on c.information_id = a.information_id
+		and c.is_delete ='0' 
+		<if test=' member_id != null and member_id != "" '>
+			and c.member_id = #{member_id}
+		</if>
+		where a.is_delete = '0' 
+		
+		<if test=' class_id != null and class_id != "" '>
+			 and a.class_id=#{class_id}
+		</if>
+		
+		<if test=' order_id != null and order_id != "" '>
+			 and a.order_id=#{order_id}
+		</if>
+		group by a.create_time asc
+	</select>
+	<select id="getSystemInformation" parameterType="systemInformationBean" resultType="systemInformationBean">
+		
+		select a.*,b.member_nick_name as member_name, b.member_img as member_img,b.hx_account as hx_account,
+		(case when c.relation_id != '' then 1 else 0 end ) as is_good
+		from tst_system_information as a 
+		inner join tst_member as b 
+		on a.member_id = b.member_id
+		left join tst_well_relation as c
+		on c.information_id = a.information_id 
+		and c.is_delete = '0' 
+		<if test=' member_id != null and member_id != "" '>
+			and c.member_id = #{member_id}
+		</if>
+		
+		where a.is_delete = '0' 
+		and a.information_id = #{information_id}
+		group by a.information_id desc
+	</select>
+	
+	<update id="updateSystemInformation" parameterType="systemInformationBean">
+		update tst_system_information
+		set update_time=now()
+		
+		<if test=' comment_num != null and comment_num != "" '>
+			 ,comment_num=#{comment_num}
+		</if>
+		<if test=' information_video != null and information_video != "" '>
+			 ,information_video=#{information_video}
+		</if>
+		<if test=' information_author != null and information_author != "" '>
+			 ,information_author=#{information_author}
+		</if>
+		
+		<if test=' information_title != null and information_title != "" '>
+			 ,information_title=#{information_title}
+		</if>
+		
+		<if test=' information_desc != null and information_desc != "" '>
+			 ,information_desc=#{information_desc}
+		</if>
+		<if test=' send_num != null and send_num != "" '>
+			 ,send_num=#{send_num}
+		</if>
+		
+		<if test=' read_num != null and read_num != "" '>
+			 ,read_num=#{read_num}
+		</if>
+		
+		<if test=' well_num != null and well_num != "" '>
+			 ,well_num=#{well_num}
+		</if>
+		<if test=' total_grade != null and total_grade != "" '>
+			 ,total_grade=#{total_grade}
+		</if>
+		
+		
+		where information_id=#{information_id}
+	</update>
+	<insert id="insertSystemInformation" parameterType="systemInformationBean">
+		
+		insert into 
+		tst_system_information(member_id,comment_num,information_video,
+		information_author,class_id,information_title,information_resource,
+		information_desc,send_num,information_url_desc,read_num,
+		information_img,well_num,create_time,update_time)
+		values(
+		#{member_id},#{comment_num},#{information_video},
+		#{information_author},#{class_id},#{information_title},#{information_resource},#{information_desc},
+		#{send_num},#{information_url_desc},#{read_num},	#{information_img},
+		#{well_num},now(),now())
+	</insert>
+	
+	<insert id="insertSystemInformationXinDe" parameterType="systemInformationBean">
+		
+		insert into 
+		tst_system_information(member_id,comment_num,information_video,
+		information_author,class_id,information_title,information_resource,
+		information_desc,send_num,information_url_desc,read_num,
+		information_img,well_num,create_time,update_time)
+		values(
+		#{member_id},#{comment_num},#{information_video},
+		#{information_author},#{class_id},#{information_title},#{information_resource},#{information_desc},
+		#{send_num},#{information_url_desc},#{read_num},	#{information_img},
+		#{well_num},now(),now())
+	</insert>
+	
+	
+	<insert id="insertWellRealtion" parameterType="wellRelationBean">
+		
+		insert into 
+		tst_well_relation(member_id,information_id,create_time,update_time)
+		values(
+		#{member_id},#{information_id},now(),now())
+	</insert>
+	
+	<insert id="insertShareRealtion" parameterType="shareRelationBean">
+		
+		insert into 
+		tst_share_relation(member_id,information_id,create_time,update_time)
+		values(
+		#{member_id},#{information_id},now(),now())
+	</insert>
+	
+	
+	<update id="updateWellRealtion" parameterType="wellRelationBean">
+		update tst_well_relation
+		set update_time=now(),is_delete ='1'
+		where information_id=#{information_id}
+		and  member_id = #{member_id}
+	</update>
+	
+	<select id="getWellRelation" parameterType="wellRelationBean" resultType="wellRelationBean">
+		select * from tst_well_relation
+		where is_delete='0'
+		<if test=' member_id != null and member_id != "" '>
+			 and member_id=#{member_id}
+		</if>
+		
+		<if test=' information_id != null and information_id != "" '>
+			 and information_id=#{information_id}
+		</if>
+		
+	</select>
+	<insert id="insertInformationAssessment" parameterType="informationAssessmentBean">
+		
+		insert into 
+		tst_information_assessment(member_id,information_id,assessment_star,
+		assessment_desc,assessment_imgs,parent_id,create_time,update_time)
+		values(
+		#{member_id},#{information_id},#{assessment_star},
+		#{assessment_desc},#{assessment_imgs},#{parent_id},now(),now())
+	</insert>
+	
+	
+	<select id="getInformationImgs" parameterType="systemInformationBean" resultType="Map">
+		select information_img from tst_system_information
+		where is_delete='0'
+		<if test=' member_id != null and member_id != "" '>
+			 and member_id=#{member_id}
+		</if>
+		
+		<if test=' class_id != null and class_id != "" '>
+			 and class_id=#{class_id}
+		</if>
+		
+		<if test=' information_state != null and information_state != "" '>
+			 and information_state=#{information_state}
+		</if>
+		
+	</select>
+	
+	<select id="getSystemInformationClasss" parameterType="systemInformationClassBean" resultType="systemInformationClassBean">
+		select * from tst_system_information_class
+		where is_delete='0'
+		<if test=' class_type != null and class_type != "" '>
+			 and class_type=#{class_type}
+		</if>
+		
+		<if test=' class_id != null and class_id != "" '>
+			 and class_id=#{class_id}
+		</if>
+		
+	</select>
+	<select id="getSystemInformationClass" parameterType="systemInformationClassBean" resultType="systemInformationClassBean">
+		select * from tst_system_information_class
+		where is_delete='0'
+		<if test=' class_code != null and class_code != "" '>
+			 and class_code=#{class_code}
+		</if>
+		<if test=' class_type != null and class_type != "" '>
+			 and class_type=#{class_type}
+		</if>
+		
+		<if test=' class_id != null and class_id != "" '>
+			 and class_id=#{class_id}
+		</if>
+		
+	</select>
+	
+	
+	
+</mapper>

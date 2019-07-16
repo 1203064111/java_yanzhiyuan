@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.MerchantsDaoC">
+	
+	
+	
+	<update id="auditMerchants" parameterType="merchantsBean">
+		update tst_merchants set update_time = now()
+		,apply_state = #{apply_state}
+		where merchants_id = #{merchants_id}
+	</update>
+	
+	<select id="getMerchantsStatistics" parameterType="merchantsBean" resultType="Map">
+		select count(*) merchants_count from tst_merchants
+		where is_delete='0'
+		<if test=' start_time != null and start_time != "" '>
+			and create_time>#{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			and #{end_time}>create_time
+		</if>
+	</select>
+	
+	<select id="getMerchantsIds" parameterType="merchantsBean" resultType="String">
+		select GROUP_CONCAT(merchants_id) from tst_merchants
+		where is_delete='0' and merchants_name like concat('%',#{merchants_name},'%')
+	</select>
+	
+	<update id="updateMerchantsBill" parameterType="merchantsBillBean">
+		update tst_merchants_bill
+		set update_time=now(),
+		bill_type=#{bill_type}
+		where withdrawals_id=#{withdrawals_id}
+	</update>
+	
+	<select id="getMerchantsWithdrawalsDetail" parameterType="merchantsWithdrawalsBean" resultType="merchantsWithdrawalsBean">
+		select * from tst_merchants_withdrawals
+		where withdrawals_id=#{withdrawals_id}
+	</select>
+	
+	<update id="updateMerchantsWithdrawals" parameterType="merchantsWithdrawalsBean">
+		update tst_merchants_withdrawals
+		set update_time=now()
+		<if test=' withdrawals_state != null and withdrawals_state != "" '>
+			,withdrawals_state=#{withdrawals_state}
+		</if>
+		where withdrawals_id=#{withdrawals_id}
+	</update>
+	
+	<select id="getMerchantsWithdrawalss" parameterType="merchantsWithdrawalsBean" resultType="merchantsWithdrawalsBean">
+		select a.*,b.merchants_name from tst_merchants_withdrawals as a 
+		inner join tst_merchants as b
+		on a.merchants_id=b.merchants_id
+		where a.is_delete='0'
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id=#{merchants_id}
+		</if>
+		<if test=' withdrawals_state != null and withdrawals_state != "" '>
+			and a.withdrawals_state=#{withdrawals_state}
+		</if>
+		order by a.create_time desc
+	</select>
+	
+	<insert id="insertMerchantsBill" parameterType="merchantsBillBean">
+		insert into tst_merchants_bill
+		(merchants_id,bill_type,bill_price,order_merchants_id,order_merchants_no,
+		withdrawals_id,create_time,update_time)
+		values
+		(#{merchants_id},#{bill_type},#{bill_price},#{order_merchants_id},#{order_merchants_no},
+		#{withdrawals_id},now(),now())
+	</insert>
+	
+	<update id="updateMerchantsBalance" parameterType="merchantsBalanceBean">
+		update tst_merchants_balance
+		set update_time=now()
+		<if test=' withdrawals_can_balance != null and withdrawals_can_balance != "" '>
+			,withdrawals_can_balance=#{withdrawals_can_balance}
+		</if>
+		<if test=' withdrawals_ing_balance != null and withdrawals_ing_balance != "" '>
+			,withdrawals_ing_balance=#{withdrawals_ing_balance}
+		</if>
+		<if test=' withdrawals_already_balance != null and withdrawals_already_balance != "" '>
+			,withdrawals_already_balance=#{withdrawals_already_balance}
+		</if>
+		where merchants_id=#{merchants_id}
+	</update>
+	
+	<insert id="insertMerchantsWithdrawals" parameterType="merchantsWithdrawalsBean" useGeneratedKeys="true" keyProperty="withdrawals_id">
+		insert into tst_merchants_withdrawals
+		(merchants_id,withdrawals_price,create_time,update_time)
+		values
+		(#{merchants_id},#{withdrawals_price},now(),now())
+	</insert>
+	
+	<insert id="insertMerchantsBalance" parameterType="merchantsBalanceBean">
+		insert into tst_merchants_balance
+		(merchants_id,create_time,update_time)
+		values
+		(#{merchants_id},now(),now())
+	</insert>
+	
+	<select id="getMerchantsBalanceDetail" parameterType="merchantsBalanceBean" resultType="merchantsBalanceBean">
+		select * from tst_merchants_balance
+		where merchants_id=#{merchants_id}
+	</select>
+	
+	<select id="getMerchantsBills" parameterType="merchantsBillBean" resultType="merchantsBillBean">
+		select * from tst_merchants_bill
+		where is_delete='0' and merchants_id=#{merchants_id}
+		<if test=' bill_type != null and bill_type != "" '>
+			and bill_type=#{bill_type}
+		</if>
+		order by create_time desc
+	</select>
+	
+	
+
+	<select id="getMerchantssNoPage" parameterType="merchantsBean" resultType="merchantsBean">
+		select * from tst_merchants
+		where is_delete='0' and apply_state ='1'
+		
+		<if test=' merchants_type != null and merchants_type != "" '>
+			and merchants_type = #{merchants_type}
+		</if>
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and merchants_id=#{merchants_id}
+		</if>
+		order by create_time desc
+	</select>
+	<select id="getMerchantss" parameterType="merchantsBean" resultType="merchantsBean">
+		select * from tst_merchants
+		where is_delete='0'
+		<if test=' merchants_name != null and merchants_name != "" '>
+			and merchants_name like concat('%',#{merchants_name},'%')
+		</if>
+		<if test=' merchants_type != null and merchants_type != "" '>
+			and merchants_type = #{merchants_type}
+		</if>
+		<if test=' apply_state != null and apply_state != "" '>
+			and apply_state = #{apply_state}
+		</if>
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and merchants_id = #{merchants_id}
+		</if>
+		order by create_time desc
+	</select>
+	
+	<select id="getMerchantsDetail" parameterType="merchantsBean" resultType="merchantsBean">
+		select * from tst_merchants
+		where is_delete='0' and merchants_id=#{merchants_id}
+	</select>
+	
+	<insert id="insertMerchants" parameterType="merchantsBean" useGeneratedKeys="true" keyProperty="merchants_id">
+		insert into tst_merchants
+		(merchants_name,merchants_img,merchants_contact_name,
+		merchants_contact_mobile,merchants_province,merchants_city,merchants_country,
+		merchants_detail_address,merchants_desc,business_start_time,business_end_time,
+		merchants_state,
+		company_name,company_type,company_type_name,
+		company_province,company_city,company_country,
+		company_detail_address,company_legal_name,
+		company_legal_no,company_legal_start_time,
+		company_legal_end_time,company_legal_positive_img,
+		company_legal_opposite_img,company_legal_hold_img,
+		company_business_img,company_register_capital,
+		company_register_time,company_business_range,
+		merchants_imgs,certificate_num,certificate_imgs,
+		merchants_certificate_no,merchants_certificate_img,
+		company_house_rental_img,merchants_price_img,
+		company_legal_img,longitude,latitude,
+		
+		create_time,update_time,merchants_type)
+		values
+		(#{merchants_name},#{merchants_img},#{merchants_contact_name},
+		#{merchants_contact_mobile},#{merchants_province},#{merchants_city},#{merchants_country},
+		#{merchants_detail_address},#{merchants_desc},#{business_start_time},#{business_end_time},
+		#{merchants_state},
+		#{company_name},#{company_type},#{company_type_name},
+		#{company_province},#{company_city},#{company_country},
+		#{company_detail_address},#{company_legal_name},
+		#{company_legal_no},#{company_legal_start_time},
+		#{company_legal_end_time},#{company_legal_positive_img},
+		#{company_legal_opposite_img},#{company_legal_hold_img},
+		#{company_business_img},#{company_register_capital},
+		#{company_register_time},#{company_business_range},
+		#{merchants_imgs},#{certificate_num},#{certificate_imgs},
+		#{merchants_certificate_no},#{merchants_certificate_img},
+		#{company_house_rental_img},#{merchants_price_img},
+		#{company_legal_img},#{longitude},#{latitude},
+		now(),now(),#{merchants_type})
+	</insert>
+	
+	<update id="updateMerchants" parameterType="merchantsBean">
+		update tst_merchants
+		set update_time=now() 
+		<if test=' apply_state != null and apply_state != "" '>
+			,apply_state =#{apply_state}
+		</if>
+		<if test=' qrcode_img != null and qrcode_img != "" '>
+			,qrcode_img=#{qrcode_img}
+		</if>
+		
+		
+		<if test=' merchants_imgs != null and merchants_imgs != "" '>
+			,merchants_imgs=#{merchants_imgs}
+		</if>
+		<if test=' certificate_num != null and certificate_num != "" '>
+			,certificate_num=#{certificate_num}
+		</if>
+		<if test=' certificate_imgs != null and certificate_imgs != "" '>
+			,certificate_imgs=#{certificate_imgs}
+		</if>
+		<if test=' merchants_certificate_no != null and merchants_certificate_no != "" '>
+			,merchants_certificate_no=#{merchants_certificate_no}
+		</if>
+		<if test=' merchants_certificate_img != null and merchants_certificate_img != "" '>
+			,merchants_certificate_img=#{merchants_certificate_img}
+		</if>
+		<if test=' company_house_rental_img != null and company_house_rental_img != "" '>
+			,company_house_rental_img=#{company_house_rental_img}
+		</if>
+		
+		<if test=' company_legal_img != null and company_legal_img != "" '>
+			,company_legal_img=#{company_legal_img}
+		</if>
+		
+		<if test=' merchants_name != null and merchants_name != "" '>
+			,merchants_name=#{merchants_name}
+		</if>
+		<if test=' merchants_img != null and merchants_img != "" '>
+			,merchants_img=#{merchants_img}
+		</if>
+		<if test=' merchants_contact_name != null and merchants_contact_name != "" '>
+			,merchants_contact_name=#{merchants_contact_name}
+		</if>
+		<if test=' merchants_contact_mobile != null and merchants_contact_mobile != "" '>
+			,merchants_contact_mobile=#{merchants_contact_mobile}
+		</if>
+		<if test=' merchants_province != null and merchants_province != "" '>
+			,merchants_province=#{merchants_province}
+		</if>
+		<if test=' merchants_city != null and merchants_city != "" '>
+			,merchants_city=#{merchants_city}
+		</if>
+		<if test=' merchants_country != null and merchants_country != "" '>
+			,merchants_country=#{merchants_country}
+		</if>
+		<if test=' merchants_detail_address != null and merchants_detail_address != "" '>
+			,merchants_detail_address=#{merchants_detail_address}
+		</if>
+		<if test=' merchants_desc != null and merchants_desc != "" '>
+			,merchants_desc=#{merchants_desc}
+		</if>
+		<if test=' business_start_time != null and business_start_time != "" '>
+			,business_start_time=#{business_start_time}
+		</if>
+		<if test=' business_end_time != null and business_end_time != "" '>
+			,business_end_time=#{business_end_time}
+		</if>
+		<if test=' merchants_state != null and merchants_state != "" '>
+			,merchants_state=#{merchants_state}
+		</if>
+		<if test=' company_name != null and company_name != "" '>
+			,company_name=#{company_name}
+		</if>
+		<if test=' company_type != null and company_type != "" '>
+			,company_type=#{company_type}
+		</if>
+		<if test=' company_type_name != null and company_type_name != "" '>
+			,company_type_name=#{company_type_name}
+		</if>
+		<if test=' company_province != null and company_province != "" '>
+			,company_province=#{company_province}
+		</if>
+		<if test=' company_city != null and company_city != "" '>
+			,company_city=#{company_city}
+		</if>
+		<if test=' company_country != null and company_country != "" '>
+			,company_country=#{company_country}
+		</if>
+		<if test=' company_detail_address != null and company_detail_address != "" '>
+			,company_detail_address=#{company_detail_address}
+		</if>
+		<if test=' company_legal_name != null and company_legal_name != "" '>
+			,company_legal_name=#{company_legal_name}
+		</if>
+		<if test=' company_legal_no != null and company_legal_no != "" '>
+			,company_legal_no=#{company_legal_no}
+		</if>
+		<if test=' company_legal_start_time != null and company_legal_start_time != "" '>
+			,company_legal_start_time=#{company_legal_start_time}
+		</if>
+		<if test=' company_legal_end_time != null and company_legal_end_time != "" '>
+			,company_legal_end_time=#{company_legal_end_time}
+		</if>
+		<if test=' company_legal_positive_img != null and company_legal_positive_img != "" '>
+			,company_legal_positive_img=#{company_legal_positive_img}
+		</if>
+		<if test=' company_legal_opposite_img != null and company_legal_opposite_img != "" '>
+			,company_legal_opposite_img=#{company_legal_opposite_img}
+		</if>
+		<if test=' company_legal_hold_img != null and company_legal_hold_img != "" '>
+			,company_legal_hold_img=#{company_legal_hold_img}
+		</if>
+		<if test=' company_business_img != null and company_business_img != "" '>
+			,company_business_img=#{company_business_img}
+		</if>
+		<if test=' company_register_capital != null and company_register_capital != "" '>
+			,company_register_capital=#{company_register_capital}
+		</if>
+		<if test=' company_register_time != null and company_register_time != "" '>
+			,company_register_time=#{company_register_time}
+		</if>
+		<if test=' company_business_range != null and company_business_range != "" '>
+			,company_business_range=#{company_business_range}
+		</if>
+		<if test=' merchants_type != null and merchants_type != "" '>
+			,merchants_type = #{merchants_type}
+		</if>
+		
+		<if test=' longitude != null and longitude != "" '>
+			,longitude = #{longitude}
+		</if>
+		
+		<if test=' latitude != null and latitude != "" '>
+			,latitude = #{latitude}
+		</if>
+		
+		where merchants_id=#{merchants_id}
+	</update>
+	
+	<update id="deleteMerchants" parameterType="merchantsBean">
+		update tst_merchants
+		set update_time=now(),is_delete='1'
+		where merchants_id=#{merchants_id}
+	</update>
+	
+	<insert id="insertMerchantsIndustry" parameterType="industryBean">
+		insert into tst_merchants_industry
+		(merchants_id,industry_id,create_time,update_time)
+		values
+		(#{merchants_id},#{industry_id},now(),now())
+	</insert>
+	
+	<update id="updateMerchantsIndustry" parameterType="industryBean">
+		update tst_merchants_industry
+		set update_time=now(),
+		is_delete='0'
+		where merchants_industry_id=#{merchants_industry_id}
+	</update>
+	
+	<update id="deleteMerchantsIndustrys" parameterType="industryBean">
+		update tst_merchants_industry
+		set update_time=now(),
+		is_delete='1'
+		where merchants_id=#{merchants_id}
+	</update>
+	<select id="getMerchantsIndustrys" parameterType="industryBean" resultType="industryBean">
+		select a.*,b.merchants_industry_id,b.merchants_id,
+		(case when b.merchants_industry_id is null then 0 else 1 end) as is_check from tst_industry as a
+		left join tst_merchants_industry as b
+		on a.industry_id=b.industry_id and b.is_delete='0' and b.merchants_id=#{merchants_id}
+		where a.is_delete='0'
+		order by a.sort desc
+	</select>
+</mapper>

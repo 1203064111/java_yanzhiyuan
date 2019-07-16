@@ -1,0 +1,881 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tst.project.dao.interfaces.PositionDao">
+
+
+	<insert id="insertMemberSign" parameterType="memberSignBean" useGeneratedKeys="true" keyProperty="sign_id">
+		insert into 
+		tst_member_sign(member_id,last_modify_time,create_time,update_time)
+		values(#{member_id},now(),now(),now())
+	</insert>
+	
+	<update id="updateMemberSign" parameterType="memberSignBean">
+		update tst_member_sign
+		set update_time=now(),last_modify_time=now()
+		<if test=' count != null and count != "" '>
+			, count =#{count}
+		</if>
+		where sign_id =#{sign_id}
+	</update>
+
+	<select id="getMemberSignByMemberId" parameterType="memberSignBean" resultType="memberSignBean">
+		select * from tst_member_sign 
+		where  is_delete = '0' and  member_id=#{member_id}
+	</select>
+	<select id="getMaterialByIdCard" parameterType="materialBean" resultType="materialBean">
+		select * from tst_material 
+		where   id_card=#{id_card}
+	</select>
+
+	<select id="getPositionByClose" parameterType="positionBean" resultType="positionBean">
+		
+		select a.position_id from tst_position as a 
+		inner join tst_advertise_order as b 
+		on a.position_id = b.position_id and b.order_type = '2' 
+		and ((b.pay_type='0' and b.order_state= '1') or (b.pay_type='1' and b.order_state= '0'))
+		where a.is_delete = '0' and  TIMESTAMPDIFF(MINUTE,a.end_time,now())  = 0
+	</select>
+	<select id="getPositionByClose2" parameterType="positionBean" resultType="positionBean">
+		
+		select a.position_id from tst_position as a 
+		where a.is_delete = '0'  and find_in_set(a.position_state,'1,2')
+		and TIMESTAMPDIFF(HOUR,a.end_time,now())  = 12
+	</select>
+	<select id="getRequirePositionByMemberId2" parameterType="memberBean" resultType="requirePositionBean">
+		select * from tst_require_position 
+		where is_delete = '0' and  member_id =#{member_id}
+	</select>
+	<select id="getMaterialByMemberId" parameterType="memberBean" resultType="materialBean">
+		select * from tst_material 
+		where is_delete = '0'  and member_id =#{member_id}
+	</select>
+	<select id="getPayDetailsByMember" parameterType="payDetailBean" resultType="payDetailBean">
+		select * from tst_pay_detail
+		where is_delete ='0' 
+		and member_id = #{member_id}
+		<if test=" pay_detail_type != null and pay_detail_type != '' ">
+		and pay_detail_type = #{pay_detail_type}
+		</if>
+	</select>
+	<select id="getAssessmentsByMaterial" parameterType="assessmentBean" resultType="assessmentBean">
+		select * from tst_assessment 
+		where is_delete ='0' 
+		and material_id = #{material_id}
+	</select>
+	
+	<select id="getMemberAssessmentByMemberId" parameterType="memberAssessmentBean" resultType="memberAssessmentBean">
+		select * from tst_member_assessment 
+		where is_delete ='0' 
+		and member2_id = #{member_id}
+	</select>
+	<insert id="insertAssessment" parameterType="assessmentBean" useGeneratedKeys="true" keyProperty="assessment_id">
+		insert into 
+		tst_assessment(member_id,member_name,material_id,parent_id,assessment_star,assessment_desc,
+		assessment_imgs,create_time,update_time)
+		values(#{member_id},#{member_name},#{material_id},#{parent_id},
+		#{assessment_star},#{assessment_desc},#{assessment_imgs},now(),now())
+	</insert>
+	<insert id="insertMemberAssessment" parameterType="memberAssessmentBean" useGeneratedKeys="true" keyProperty="assessment_id">
+		insert into 
+		tst_member_assessment(member_id,member2_id,material_id,material_name,parent_id,assessment_identity,assessment_attitude,assessment_skill,assessment_desc,
+		assessment_imgs,create_time,update_time)
+		values(#{member_id},#{member2_id},#{material_id},#{material_name},#{parent_id},#{assessment_identity},#{assessment_attitude},#{assessment_skill}
+		,#{assessment_desc},#{assessment_imgs},now(),now())
+	</insert>
+	<select id="getAssessmentByMember" parameterType="assessmentBean" resultType="assessmentBean">
+		select * from tst_assessment 
+		where is_delete ='0' 
+		
+		<if test=" member_id != null and member_id != '' ">
+		  and member_id = #{member_id}
+		</if>
+		and material_id = #{material_id}
+	</select>
+	<select id="getMemberAssessment" parameterType="memberAssessmentBean" resultType="memberAssessmentBean">
+		select * from tst_member_assessment 
+		where is_delete ='0' 
+		<if test=" member_id != null and member_id != '' ">
+		  and member_id = #{member_id}
+		</if>
+		<if test=" member2_id != null and member2_id != '' ">
+		  and member2_id = #{member2_id}
+		</if>
+		
+	</select>
+	
+	<select id="getAssessmentByMemberAndMaterial" parameterType="assessmentBean" resultType="assessmentBean">
+		
+		select * from tst_assessment 
+		where is_delete = '0' 
+		<if test=" member_id != null and member_id != '' ">
+		  and member_id = #{member_id}
+		</if>
+		 and material_id  = #{material_id} 
+	</select>
+	<select id="getFinalPositionPersonsByMember" parameterType="positionPersonsBean" resultType="positionBean">
+		
+		select c.material_id as material_id,c.material_name as material_name ,c.material_imgs2 as material_img,
+		a.position_title,b.create_time as create_time,a.position_id ,a.final_price
+		from tst_position as a
+		inner join tst_position_persons as b 
+		on b.position_id = a.position_id
+		inner join tst_material as c 
+		on a.material_id = c.material_id 
+		and b.state = '2' and a.position_state = '2'
+		and a.is_delete = '0' and b.is_delete = '0'
+		where b.member_id = #{member_id} group by a.position_id
+	</select>
+	<select id="getFinalAmountByMember" parameterType="positionPersonsBean" resultType="positionBean">
+		
+		select sum(a.final_price) as final_price
+		from tst_position as a
+		inner join tst_position_persons as b 
+		on b.position_id = a.position_id
+		inner join tst_material as c 
+		on a.material_id = c.material_id 
+		and b.state = '2' and a.position_state = '2'
+		and a.is_delete = '0' and b.is_delete = '0'
+		where b.member_id = #{member_id} group by a.position_id
+	</select>
+	<select id="getMiddlePositionPersonsByMember" parameterType="positionPersonsBean" resultType="positionBean">
+	
+		select c.material_id as material_id,c.material_name as material_name ,c.material_imgs2 as material_img,
+		a.position_title,b.create_time as create_time,a.position_id ,a.final_price
+		from tst_position as a
+		inner join tst_position_persons as b 
+		on b.position_id = a.position_id
+		inner join tst_material as c 
+		on a.material_id = c.material_id 
+		and b.state = '1' and a.position_state = '1'
+		and a.is_delete = '0' and b.is_delete = '0'
+		where b.member_id = #{member_id} group by a.position_id
+	</select>
+	<select id="getPositionPersonsByMember" parameterType="positionPersonsBean" resultType="positionBean">
+		
+		select c.material_id as material_id,c.material_name as material_name ,c.material_imgs2 as material_img,
+		a.position_title,b.create_time as create_time,a.position_id ,a.final_price
+		from tst_position as a
+		inner join tst_position_persons as b 
+		on b.position_id = a.position_id
+		inner join tst_material as c 
+		on a.material_id = c.material_id 
+		and b.state = '0' 
+		and a.is_delete = '0' and b.is_delete = '0'
+		where b.member_id = #{member_id} group by a.position_id
+	</select>
+
+	<select id="getMemberDetail" parameterType="memberBean" resultType="memberBean">
+		select * from tst_member
+		where is_delete = '0'
+		<if test="member_account!=null and  member_account!=''">
+		and member_account=#{member_account}
+		</if>
+		<if test="member_id!=null and member_id!=''">
+		and member_id = #{member_id}
+		</if>
+	</select>
+	<update id="updateMemberById" parameterType="memberBean">
+		update tst_member
+		set update_time=now()
+		<if test=' comment_num != null and comment_num != "" '>
+			, comment_num =#{comment_num}
+		</if>
+		where member_id =#{member_id}
+	</update>
+	<select id="getBankCardByMemberId" parameterType="bankCardBean" resultType="bankCardBean">
+		select * from tst_member_bank_card
+		where is_delete = '0'
+		<if test=" bank_card_type !=null and bank_card_type !=''">
+		and bank_card_type = #{bank_card_type}
+		</if>
+		<if test=" role_type !=null and role_type !=''">
+		and role_type = #{role_type}
+		</if>
+		<if test="member_id!=null and member_id!=''">
+		and member_id = #{member_id}
+		</if>
+	</select>
+	<insert id="insertBankCard" parameterType="bankCardBean" useGeneratedKeys="true" keyProperty="card_id">
+		insert into 
+		tst_member_bank_card(member_id,member_name,member_mobile,
+		bank_name,bank_card_number,bank_card_type,role_type,create_time,update_time)
+		values(#{member_id},#{member_name},#{member_mobile},
+		#{bank_name},#{bank_card_number},#{bank_card_type},#{role_type},now(),now())
+	</insert>
+	<update id="updateBankCard" parameterType="bankCardBean">
+		update tst_member_bank_card
+		 set update_time = now()
+		<if test=' bank_name != null and bank_name != "" '>
+			 ,  bank_name = #{bank_name}
+		</if>
+		<if test=' member_name != null and member_name != "" '>
+			 ,  member_name = #{member_name}
+		</if>
+		<if test=' bank_card_number != null and bank_card_number != "" '>
+			 ,  bank_card_number = #{bank_card_number}
+		</if>
+		<if test=' member_mobile != null and member_mobile != "" '>
+			 ,  member_mobile = #{member_mobile}
+		</if>
+		where card_id = #{card_id}
+	</update>
+	
+	<update id="deletePositionClasses" parameterType="positionClassesBean">
+		update tst_position_classes set update_time = now(),
+		is_delete = '1' where require_position_id = #{require_position_id}
+	</update>
+	<update id="deleteRequirePositionSalary" parameterType="requirePositionSalaryBean">
+		update tst_require_position_salary set update_time = now(),
+		is_delete = '1' where require_position_id = #{require_position_id}
+	</update>
+	<select id="getPositionPersons" parameterType="positionPersonsBean" resultType="requirePositionBean">
+		select a.* ,(case when b.state = '0' then 0 when b.state = '1' then 1 when b.state = '2' then 2  else 0 end) as state,
+		(case when b.agree_offline = '0' then 0 when b.agree_offline = '1' then 1  else 0 end) as agree_offline
+		from  tst_require_position as a 
+		inner join tst_position_persons  as b on a.require_position_id = b.require_position_id
+		and a.is_delete ='0' and b.is_delete = '0'
+		<if test=' position_id != null and position_id != "" '>
+			 and  b.position_id = #{position_id}
+		</if>
+		<if test=' state != null and state != "" '>
+			 and find_in_set(b.state,#{state})
+		</if>
+		group by a.require_position_id
+		
+	</select>
+	<select id="getPositionPerson" parameterType="positionPersonsBean" resultType="positionPersonsBean">
+		select * from  tst_position_persons  
+		where  is_delete ='0' 
+		<if test=' position_id != null and position_id != "" '>
+			 and  position_id = #{position_id}
+		</if>
+		<if test=' member_id != null and member_id != "" '>
+			 and  member_id = #{member_id}
+		</if>
+		
+	</select>
+	
+	<update id="agreeOfflinePositionPerson" parameterType="positionPersonsBean">
+		update tst_position_persons set update_time =now(), agree_offline = '1'
+		where is_delete = '0' 
+		and position_id = #{position_id}
+		and member_id = #{member_id}
+	</update>
+	<select id="getPositionPersonList" parameterType="positionPersonsBean" resultType="positionBean">
+		select b.* from  tst_position_persons   as a 
+		inner join tst_position as b
+		on a.position_id = b.position_id
+		where  a.is_delete ='0'  and b.is_delete ='0'
+		<if test=' member_id != null and member_id != "" '>
+			 and  a.member_id = #{member_id}
+		</if>
+		<if test=' state != null and state != "" '>
+			 and  a.state = #{state}
+		</if>
+		<if test=' create_time != null and create_time != "" and update_time != null and update_time !="" '>
+			 and   ((b.start_time > #{create_time} AND #{update_time} > b.start_time  )
+  			 OR (#{create_time} > b.start_time  AND b.end_time > #{update_time} )
+    		 OR (b.end_time > #{create_time} AND #{update_time} > b.end_time  ))
+		</if>
+	</select>
+	<select id="getPositionsByMaterialId" parameterType="positionBean" resultType="positionBean">
+		select a.* from tst_position as a
+		inner join tst_advertise_order as c 
+		on c.position_id = a.position_id and c.order_state = '1' and c.order_type = '1'
+		where a.is_delete = '0'
+		and a.material_id = #{material_id}
+		<if test=' position_state != null and position_state != "" '>
+			and find_in_set(a.position_state,#{position_state})
+		</if>
+		group by a.position_id
+	</select>
+	<select id="getMaterialById" parameterType="materialBean" resultType="materialBean">
+		select * from tst_material 
+		where   material_id=#{material_id}
+	</select>
+	<update id="updateMaterialById" parameterType="materialBean">
+		update tst_material
+		set update_time=now()
+		
+		<if test=' material_state != null and material_state != "" '>
+			, material_state =#{material_state}
+		</if>
+		<if test=' comment_num != null and comment_num != "" '>
+			, comment_num =#{comment_num}
+		</if>
+		<if test=' material_imgs1 != null and material_imgs1 != "" '>
+			, material_imgs1 =#{material_imgs1}
+		</if>
+		<if test=' material_address != null and material_address != "" '>
+			, material_address =#{material_address}
+		</if>
+		<if test=' material_phone != null and material_phone != "" '>
+			, material_phone =#{material_phone}
+		</if>
+		<if test=' birth_time != null and birth_time != "" '>
+			, birth_time =#{birth_time}
+		</if>
+		<if test=' id_card != null and id_card != "" '>
+			, id_card =#{id_card}
+		</if>
+		<if test=' material_type != null and material_type != "" '>
+			, material_type =#{material_type}
+		</if>
+		<if test=' material_name != null and material_name != "" '>
+			, material_name =#{material_name}
+		</if>
+		<if test=' linkman_name != null and linkman_name != "" '>
+			, linkman_name =#{linkman_name}
+		</if>
+		<if test=' material_imgs2 != null and material_imgs2 != "" '>
+			, material_imgs2 =#{material_imgs2}
+		</if>
+		<if test=' material_information != null and material_information != "" '>
+			, material_information =#{material_information}
+		</if>
+		<if test=' material_provider != null and material_provider != "" '>
+			, material_provider =#{material_provider}
+		</if>
+		<if test=' material_city != null and material_city != "" '>
+			, material_city =#{material_city}
+		</if>
+		<if test=' material_country != null and material_country != "" '>
+			, material_country =#{material_country}
+		</if>
+		where material_id =#{material_id}
+	</update>
+	<select id="getMaterial" parameterType="positionBean" resultType="materialBean">
+		select a.* from tst_material as a 
+		inner join tst_position as b on a.material_id = b.material_id
+		where a.material_state = '1' and  b.position_id=#{position_id}
+	</select>
+	
+	
+	<select id="getPercentDetail" parameterType="percentBean" resultType="percentBean">
+		select * from tst_percent
+		where  percent_type=#{percent_type}
+	</select>
+	<select id="getResumeSettingDetail" parameterType="resumeSettingBean" resultType="resumeSettingBean">
+		select * from tst_resume_setting
+		where  percent_type=#{percent_type}
+	</select>
+	<select id="searchPositions" parameterType="positionBean" resultType="positionBean">
+		select a.* from tst_position as a 
+		inner join tst_position_classes as b  on a.position_id = b.position_id
+		inner join tst_position_class as c on c.position_class_id =  b.position_class_id 
+		inner join tst_advertise_order as d
+		on d.position_id = a.position_id and d.order_state = '1' and d.order_type = '1'
+		and a.is_delete = '0' and b.is_delete ='0' and c.is_delete = '0'
+		<if test=' position_class_name != null and position_class_name != "" '>
+		and  c.position_class_name like concat('%',#{position_class_name},'%') 
+		</if>
+		group by a.position_id
+	</select>
+	
+	<select id="searchRequirePositions" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select a.* from tst_require_position as a 
+		left join tst_position_classes as b  on a.require_position_id = b.require_position_id
+		inner join tst_position_class as c on c.position_class_id =  b.position_class_id 
+		and a.is_delete = '0' and b.is_delete ='0' and c.is_delete = '0'
+		<if test=' position_class_names != null and position_class_names != "" '>
+		and  c.position_class_name like concat('%',#{position_class_names},'%') 
+		</if>
+		group by a.require_position_id
+	</select>
+	<select id="getPositions" parameterType="positionBean" resultType="positionBean">
+		select a.* from tst_position  as a
+		inner join tst_position_classes as b
+		on b.position_id=a.position_id and b.is_delete='0'
+		inner join tst_advertise_order as c 
+		on c.position_id = a.position_id and c.order_state = '1' and c.order_type = '1'
+		where  a.is_delete='0' and a.position_apply ='0' 
+		and find_in_set(a.position_state,'0,1,2')
+		<if test=' position_classes_id != null and position_classes_id != "" '>
+			and find_in_set(b.position_class_id,#{position_classes_id})
+		</if>
+		
+		<if test=' position_provider != null and position_provider != "" '>
+			 and  a.position_provider = #{position_provider}
+		</if>
+		<if test=' position_city != null and position_city != "" '>
+			 and  a.position_city = #{position_city}
+		</if>
+		
+		<if test=' position_country != null and position_country != "" '>
+			 and  a.position_country = #{position_country}
+		</if>
+		<if test=' salary_start != null and salary_start != "" '>
+			 and  a.final_price >= #{salary_start}
+		</if>
+		<if test=' salary_end != null and salary_end != "" '>
+			 and   #{salary_end} > a.final_price
+		</if>
+		<if test=' start_time != null and start_time != "" '>
+			 and  a.start_time > #{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			 and #{end_time} >  a.end_time
+		</if>
+		
+		<if test=' position_title != null and position_title != "" '>
+			 and  a.position_title like concat('%',#{position_title},'%') 
+		</if>
+		<if test=' position_specific != null and position_specific != "" '>
+			 and  a.position_specific like concat('%',#{position_specific},'%') 
+		</if>
+		
+		
+		
+		
+		
+		<if test=' work_specific != null and work_specific != "" '>
+			 and  a.work_specific=#{work_specific}
+		</if>
+		<if test=' position_type != null and position_type != "" '>
+			 and  a.position_type=#{position_type}
+		</if>
+		group by a.position_id 
+		order by a.create_time desc
+	</select>
+	<select id="getRequirePositions" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select a.* from tst_require_position as a 
+		inner join tst_require_position_salary  as b 
+		on b.require_position_id = a.require_position_id and b.is_delete = '0'
+		inner join tst_position_classes as c 
+		on c.require_position_id = a.require_position_id and c.is_delete = '0'
+		where a.is_delete='0'
+		<if test=' require_position_salaries_id != null and require_position_salaries_id != "" '>
+			and find_in_set(b.salary_id,#{require_position_salaries_id})
+		</if>
+		<if test=' position_class_id != null and position_class_id != "" '>
+			and find_in_set(c.position_class_id,#{position_class_id})
+		</if>
+		<if test=' start_time != null and start_time != "" '>
+			 and a.start_time > #{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			 and  #{end_time} > a.end_time 
+		</if>
+		<if test=' require_position_city != null and require_position_city != "" '>
+			 and a.require_position_city = #{require_position_city}
+		</if>
+		<if test=' require_position_country != null and require_position_country != "" '>
+			 and a.require_position_country = #{require_position_country}
+		</if>
+		<if test=' require_position_provider != null and require_position_provider != "" '>
+			 and a.require_position_provider =  #{require_position_provider}
+		</if>
+		group by a.create_time desc
+		
+	</select>
+	<select id="getinvateRequirePositions" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select * from tst_require_position 
+		where is_delete ='0'
+		<if test=' total_score != null and total_score != "" '>
+			 and total_score >  CONVERT(#{total_score},SIGNED)
+		</if>
+	</select>
+	
+	<select id="getRequirePositionByMemberId" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select * from tst_require_position
+		where is_delete='0' 
+		and member_id = #{member_id}
+	</select>
+	<select id="getRequirePosition" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select * from tst_require_position
+		where is_delete='0' 
+		and require_position_id = #{require_position_id}
+	</select>
+	<select id="getPositionClassNames" parameterType="positionClassesBean" resultType="positionClassBean">
+		select b.* from tst_position_classes  as a
+		inner join tst_position_class as b on a.position_class_id = b.position_class_id
+		and b.is_delete ='0' and a.is_delete ='0'  
+		<if test=' position_id != null and position_id != "" '>
+			 and  a.position_id = #{position_id}
+		</if>
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  a.require_position_id = #{require_position_id}
+		</if>
+	</select>
+	<select id="getSalaryNames" parameterType="requirePositionSalaryBean" resultType="salaryBean">
+		
+		select b.* from tst_require_position_salary as a 
+		inner join tst_salary as b on a.salary_id = b.salary_id 
+		and b.is_delete = '0' and a. is_delete = '0'
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  a.require_position_id = #{require_position_id}
+		</if>
+	</select>
+	<select id="getPositionClassess" parameterType="positionClassesBean" resultType="positionClassesBean">
+	
+		select  a.position_class_id as position_class_id,
+		a.position_class_name as  position_class_name, 
+		(case when b.position_classes_id is null then 0 else 1 end) as is_remark
+		from tst_position_class as a 
+		left join tst_position_classes  as b on
+		a.position_class_id=b.position_class_id 
+		and b.is_delete ='0'
+		<if test=' position_id != null and position_id != "" '>
+			 and  b.position_id = #{position_id}
+		</if>
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  b.require_position_id = #{require_position_id}
+		</if>
+	
+	</select>
+	<select id="getPositionClassesByRequireId" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select  * from tst_position_classes
+		where is_delete ='0'
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  require_position_id = #{require_position_id}
+		</if>
+	</select>
+	<select id="getSalarysByRequireId" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select  * from tst_require_position_salary
+		where is_delete ='0'
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  require_position_id = #{require_position_id}
+		</if>
+	</select>
+	
+	<!-- <select id="getPositionActivitiess" parameterType="positionActivitiesBean" resultType="positionActivitiesBean">
+	
+		select a.position_activity_id as position_activity_id ,
+		a.position_activity_name as position_activity_name, (case when b.position_activity_id is null then 0 else 1 end) as is_remark
+		from tst_position_activity as a left join tst_position_activities as b on a.position_activity_id = b.position_activity_id
+		and b.is_delete ='0'
+		<if test=' position_id != null and position_id != "" '>
+			 and  position_id = #{position_id}
+		</if>
+	
+	</select> -->
+	<select id="getPositionClasss" parameterType="positionClassBean" resultType="positionClassBean">
+		select *  from tst_position_class where is_delete ='0'
+	</select>
+	<select id="getSalarys" parameterType="salaryBean" resultType="salaryBean">
+	select *  from tst_salary where is_delete ='0'
+	</select>
+	<select id="getPositionPersonss" parameterType="positionPersonsBean" resultType="positionPersonsBean">
+		select * from tst_position_persons 
+		where  is_delete='0'
+		<if test=' position_id != null and position_id != "" '>
+			 and  position_id = #{position_id}
+		</if>
+		<if test=' state != null and state != "" '>
+			 and  state = #{state}
+		</if>
+	</select>
+	<select id="getRequirePositionSalaries" parameterType="requirePositionSalaryBean" resultType="requirePositionSalaryBean">
+		
+		select a.salary_id as salary_id, a.salary_range as salary_range , 
+		(case when b.salary_id is null then 0 else 1 end) as is_remark
+		from  tst_salary  as a
+		left join tst_require_position_salary as b  on a.salary_id = b.salary_id and b.is_delete='0'
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  require_position_id = #{require_position_id}
+		</if>
+	</select>
+	
+	
+	<select id="getPosition" parameterType="positionBean" resultType="positionBean">
+		select * from tst_position 
+		where is_delete='0' 
+		and position_id = #{position_id}
+	</select>
+	<update id="updatePosition" parameterType="positionBean">
+		update tst_position
+		set update_time=now()
+		
+		<if test=' invitation_num != null and invitation_num != "" '>
+			 ,invitation_num=#{invitation_num}
+		</if>
+		<if test=' position_city != null and position_city != "" '>
+			 ,position_city=#{position_city}
+		</if>
+		
+		<if test=' position_country != null and position_country != "" '>
+			 ,position_country=#{position_country}
+		</if>
+		
+		<if test=' position_title != null and position_title != "" '>
+			 ,position_title=#{position_title}
+		</if>
+		<if test=' position_specific != null and position_specific != "" '>
+			 ,position_specific=#{position_specific}
+		</if>
+		
+		
+		<if test=' position_provider != null and position_provider != "" '>
+			 ,position_provider=#{position_provider}
+		</if>
+		<if test=' online != null and online != "" '>
+			 ,online=#{online}
+		</if>
+		<if test=' price != null and price != "" '>
+			 ,price=#{price}
+		</if>
+		<if test=' final_price != null and final_price != "" '>
+			 ,final_price=#{final_price}
+		</if>
+		<if test=' position_address != null and position_address != "" '>
+			 ,position_address=#{position_address}
+		</if>
+		<if test=' position_state != null and position_state != "" '>
+			 ,position_state=#{position_state}
+		</if>
+		
+		<if test=' work_specific != null and work_specific != "" '>
+			 ,work_specific=#{work_specific}
+		</if>
+		<if test=' position_type != null and position_type != "" '>
+			 ,position_type=#{position_type}
+		</if>
+		
+		where position_id=#{position_id}
+	</update>
+	<insert id="insertPosition" parameterType="positionBean" useGeneratedKeys="true" keyProperty="position_id">
+		
+		insert into 
+		tst_position(member_id,invitation_num,position_city,create_time,position_country,end_time,
+		position_title,position_specific,start_time,position_provider,update_time,price,final_price,position_address,
+		material_id,material_name,work_specific,position_type,position_img1,position_img2,position_img3,
+		sex,weight,height,age,position_video1,position_classes_id,three_size)
+		values(
+		#{member_id},#{invitation_num},#{position_city},now(),#{position_country},#{end_time},
+		#{position_title},#{position_specific},#{start_time},#{position_provider},now(),#{price},#{final_price},#{position_address},
+		#{material_id},#{material_name},#{work_specific},#{position_type},#{position_img1},#{position_img2},#{position_img3},
+		#{sex},#{weight},#{height},#{age},#{position_video1},#{position_classes_id},#{three_size})
+	</insert>
+	<insert id="insertMaterial" parameterType="materialBean" useGeneratedKeys="true" keyProperty="material_id">
+		insert into 
+		tst_material(position_id,linkman_name,material_name,material_type,id_card,birth_time,material_phone,
+		material_address,material_imgs1,material_imgs2,create_time,update_time,material_provider,material_city,material_country,
+		material_information,member_id,hx_account)
+		values(
+		#{position_id},#{linkman_name},#{material_name},#{material_type},#{id_card},#{birth_time},#{material_phone},
+		#{material_address},#{material_imgs1},#{material_imgs2},now(),now(),#{material_provider},#{material_city},#{material_country},
+		#{material_information},#{member_id},#{hx_account})
+		
+	</insert>
+	<!-- <insert id="insertPositionActivities" parameterType="positionActivitiesBean">
+		insert into 
+		tst_position_activities(position_activity_id,position_id,create_time,update_time)
+		values(
+		#{position_activity_id},#{position_id},now(),now())
+	</insert> -->
+	<insert id="insertPositionClasses" parameterType="positionClassesBean">
+		insert into 
+		tst_position_classes(position_id,position_class_id,require_position_id,type,create_time,update_time)
+		values(
+		#{position_id},#{position_class_id},#{require_position_id},#{type},now(),now())
+	</insert>
+	<insert id="insertRequirePositionSalary" parameterType="requirePositionSalaryBean">
+		insert into 
+		tst_require_position_salary(require_position_id,salary_id,member_id,create_time,update_time)
+		values(
+		#{require_position_id},#{salary_id},#{member_id},now(),now())
+	</insert>
+	
+	<update id="deletePosition" parameterType="positionBean">
+		update tst_position set update_time = now()
+		,is_delete = 1
+		where position_id = position_id
+	</update>
+	
+	
+
+	<update id="updatePositionPersons" parameterType="positionPersonsBean">
+		update tst_position_persons
+		set update_time=now()
+		<if test=' state != null and state != "" '>
+			 ,state=#{state}
+		</if>
+		where require_position_id =#{require_position_id} and position_id = #{position_id}
+	</update>
+	<insert id="insertPositionPersons" parameterType="positionPersonsBean">
+		
+		insert into 
+		tst_position_persons(member_id,update_time,create_time,position_id,require_position_id)
+		values(
+		#{member_id},now(),now(),#{position_id},#{require_position_id})
+		
+	</insert>
+	<insert id="insertAdvertiseOrder" parameterType="advertiseOrderBean" useGeneratedKeys="true" keyProperty="advertise_order_id">
+		
+		insert into 
+		tst_advertise_order(material_id,member_id,position_id,advertise_order_total,order_pay_second,order_fee,mobile,
+		order_no,order_type,pay_type,order_pay_first,create_time,update_time,pay_end_time)
+		values(
+		#{material_id},#{member_id},#{position_id},#{advertise_order_total},#{order_pay_second},#{order_fee},#{mobile},
+		#{order_no},'1',#{pay_type},#{order_pay_first},now(),now(),
+		(select ADDDATE(now(),interval percent_value minute) from tst_percent where percent_type='wait_pay' and is_delete='0')
+		)
+		
+	</insert>
+	
+	<insert id="insertFinalAdvertiseOrder" parameterType="advertiseOrderBean" useGeneratedKeys="true" keyProperty="advertise_order_id">
+		insert into 
+		tst_advertise_order(material_id,member_id,position_id,advertise_order_total,order_pay_second,order_fee,mobile,
+		order_no,order_type,pay_type,order_pay_first,create_time,update_time,pay_end_time)
+		values(
+		#{material_id},#{member_id},#{position_id},#{advertise_order_total},#{order_pay_second},#{order_fee},#{mobile},
+		#{order_no},'2',#{pay_type},#{order_pay_first},now(),now(),
+		(select ADDDATE(now(),interval percent_value minute) from tst_percent where percent_type='wait_pay' and is_delete='0')
+		)
+	
+	
+	</insert>
+	<insert id="insertPayDetail" parameterType="payDetailBean">
+		insert into 
+		tst_pay_detail(member_id,advertise_order_id,pay_detail_type,pay_detail_title,price,pay_detail_no,
+		pay_way,advertise_order_no,create_time,update_time)
+		values(
+		#{member_id},#{advertise_order_id},#{pay_detail_type},#{pay_detail_title},#{price},#{pay_detail_no},#{pay_way},
+		#{advertise_order_no},now(),now()
+		)
+	
+	</insert>
+	
+	<update id="updateAdvertiseOrder" parameterType="advertiseOrderBean">
+		update tst_advertise_order set update_time = now()
+		<if test=' pay_type != null and pay_type != "" '>
+			 ,pay_type = #{pay_type} 
+		</if>
+		<if test=' order_state != null and order_state != "" '>
+			, order_state =#{order_state}
+		</if>
+		<if test=' pay_way != null and pay_way != "" '>
+			, pay_way =#{pay_way}
+		</if>
+		<if test=' pay_charge != null and pay_charge != "" '>
+			, pay_charge =#{pay_charge}
+		</if>
+		<if test=' out_trade_no != null and out_trade_no != "" '>
+			, out_trade_no =#{out_trade_no}
+		</if>
+		
+		where advertise_order_id = #{advertise_order_id}
+	</update>
+	<update id="payAdvertiseOrder" parameterType="advertiseOrderBean">
+		update tst_advertise_order
+		set pay_time=now(),order_state='1'
+		<if test=' pay_way != null and pay_way != "" '>
+			,pay_way=#{pay_way}
+		</if>
+		where advertise_order_id=#{advertise_order_id} and member_id=#{member_id}
+	</update>
+	
+	<select id="getAdvertiseOrder" parameterType="advertiseOrderBean" resultType="advertiseOrderBean">
+		select * from tst_advertise_order
+		where is_delete='0'
+		<if test=' advertise_order_id != null and advertise_order_id != "" '>
+			and advertise_order_id=#{advertise_order_id}
+		</if>
+		
+		<if test=' order_type != null and order_type != "" '>
+			and order_type=#{order_type}
+		</if>
+		<if test=' position_id != null and position_id != "" '>
+			and position_id=#{position_id}
+		</if>
+		<if test=' out_trade_no != null and out_trade_no != "" '>
+			and out_trade_no=#{out_trade_no}
+		</if>
+	</select>
+	<update id="deletePositionPersons" parameterType="positionPersonsBean">
+	
+		update tst_position_persons set update_time = now()
+		,is_delete = '1'
+		where is_delete = '0' and  position_id = #{position_id} and 
+		require_position_id = #{require_position_id}
+		
+	</update>
+	
+	<update id="updateRequirePosition" parameterType="requirePositionBean">
+		update tst_require_position
+		set update_time=now()
+		
+		<if test=' start_time != null and start_time != "" '>
+			 ,start_time=#{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			 ,end_time=#{end_time}
+		</if>
+		<if test=' require_position_city != null and require_position_city != "" '>
+			 ,require_position_city=#{require_position_city}
+		</if>
+		<if test=' require_position_country != null and require_position_country != "" '>
+			 ,require_position_country=#{require_position_country}
+		</if>
+		<if test=' require_position_provider != null and require_position_provider != "" '>
+			 ,require_position_provider=#{require_position_provider}
+		</if>
+		<if test=' three_size != null and three_size != "" '>
+			 ,three_size=#{three_size}
+		</if>
+		<if test=' height != null and height != "" '>
+			 ,height=#{height}
+		</if>
+		<if test=' weight != null and weight != "" '>
+			 ,weight=#{weight}
+		</if>
+		<if test=' age != null and age != "" '>
+			 ,age=#{age}
+		</if>
+		<if test=' sex != null and sex != "" '>
+			 ,sex=#{sex}
+		</if>
+		<if test=' name != null and name != "" '>
+			 ,name=#{name}
+		</if>
+		<if test=' imgs != null and imgs != "" '>
+			 ,imgs=#{imgs}
+		</if>
+		<if test=' information != null and information != "" '>
+			 ,information=#{information}
+		</if>
+		<if test=' information_imgs != null '>
+			 ,information_imgs=#{information_imgs}
+		</if>
+		<if test=' information_video != null '>
+			 ,information_video=#{information_video}
+		</if>
+		<if test=' total_score != null and total_score != "" '>
+			 ,total_score=#{total_score}
+		</if>
+		<if test=' comment_count != null and comment_count != "" '>
+			 ,comment_count=#{comment_count}
+		</if>
+		<if test=' assessment_identity != null and assessment_identity != "" '>
+			 ,assessment_identity=#{assessment_identity}
+		</if>
+		<if test=' assessment_attitude != null and assessment_attitude != "" '>
+			 ,assessment_attitude=#{assessment_attitude}
+		</if>
+		<if test=' assessment_skill != null and assessment_skill != "" '>
+			 ,assessment_skill=#{assessment_skill}
+		</if>
+		where require_position_id=#{require_position_id}
+	</update>
+	<insert id="insertRequirePosition" parameterType="requirePositionBean" useGeneratedKeys="true" keyProperty="require_position_id">
+		
+		insert into 
+		tst_require_position(member_id,hx_account,name,sex,age,weight,height,imgs,id_card,three_size,information,information_imgs,information_video,
+		start_time,update_time,create_time,
+		end_time,require_position_city,require_position_country,require_position_provider,total_score)
+		values(
+		#{member_id},#{hx_account},#{name},#{sex},#{age},#{weight},#{height},#{imgs},#{id_card},#{three_size},#{information},#{information_imgs},#{information_video},
+		#{start_time},now(),now(),#{end_time},
+		#{require_position_city},#{require_position_country},#{require_position_provider},#{total_score}
+		)
+		
+	</insert>
+	<update id="deleteRequirePosition" parameterType="requirePositionBean">
+		update tst_require_position set update_time = now()
+		,start_time =null,end_time = null,require_position_provider=null,
+		require_position_city=null,require_position_country=null
+		where require_position_id = #{require_position_id}
+	</update>
+
+</mapper>

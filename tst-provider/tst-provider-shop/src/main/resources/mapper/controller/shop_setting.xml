@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.ShopSettingDaoC">
+	
+	<update id="updatePercent" parameterType="percentBean">
+		update tst_percent
+		set update_time=now(),percent_value=#{percent_value}
+		where percent_id=#{percent_id}
+	</update>
+	
+	<select id="getPercents" parameterType="percentBean" resultType="percentBean">
+		select * from tst_percent
+		where is_delete='0'
+	</select>
+	
+	<select id="getBanners" parameterType="shopBannerBean" resultType="shopBannerBean">
+		select * from tst_banner
+		where is_delete='0'
+		order by sort desc
+	</select>
+	
+	<select id="getBannerDetail" parameterType="shopBannerBean" resultType="shopBannerBean">
+		select * from tst_banner
+		where is_delete='0'
+		and banner_id = #{banner_id}
+	</select>
+	
+	<select id="moveBanner" parameterType="shopBannerBean" resultType="shopBannerBean">
+		select * from tst_banner
+		where is_delete='0'
+		<if test=' sort_type == "desc" '>
+			and sort>#{sort}
+		</if>
+		<if test=' sort_type == "asc" '>
+			and #{sort}>sort
+		</if>
+		
+		<if test=' sort_type == "asc" '>
+			order by sort desc
+		</if>
+		<if test=' sort_type == "desc" '>
+			order by sort asc
+		</if>
+		limit 0,1
+	</select>
+	
+	<insert id="insertBanner" useGeneratedKeys="true" keyProperty="banner_id">
+		insert into tst_banner(banner_title,banner_img,banner_type,goods_id,position_id,baike_id,information_site,merchants_id,sort,
+		create_time,update_time)
+		values
+		(#{banner_title},#{banner_img},#{banner_type},#{goods_id},#{position_id},#{baike_id},#{information_site},#{merchants_id},
+			IFNULL((select a.sort+1 from (
+			select sort  
+			from tst_banner where is_delete='0'
+			order by sort desc limit 0,1) a),"1"),now(),now())
+	</insert>
+	
+	<update id="updateBanner" parameterType="shopBannerBean">
+		update tst_banner 
+		set update_time = now()
+		<if test=' banner_title != null and banner_title != "" '>
+			,banner_title=#{banner_title}
+		</if>
+		<if test=' banner_img != null and banner_img != "" '>
+			,banner_img=#{banner_img}
+		</if>
+		,banner_type=#{banner_type}
+		,goods_id=#{goods_id}
+		,information_site=#{information_site}
+		,position_id=#{position_id}
+		,baike_id=#{baike_id}
+		,merchants_id=#{merchants_id}
+		<if test=' sort != null and sort != "" '>
+			,sort=#{sort}
+		</if>
+		where banner_id = #{banner_id}
+	</update>
+	
+	<update id="deleteBanner" parameterType="shopBannerBean">
+		update tst_banner 
+		set update_time = now()
+		,is_delete = 1
+		where banner_id = #{banner_id}
+	</update>
+	
+		
+</mapper>

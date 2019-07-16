@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.ShopMemberDao">
+
+	<insert id="insertShopMember" parameterType="shopMemberBean">
+		insert into tst_member
+		(member_id,create_time,update_time)
+		values
+		(#{member_id},now(),now())
+	</insert>
+	
+	<update id="updateShopMember" parameterType="shopMemberBean">
+		update tst_member
+		set update_time=now()
+		<if test=' is_buy != null and is_buy != "" '>
+			,is_buy=#{is_buy}
+		</if>
+		where member_id=#{member_id}
+	</update>
+
+	<insert id="synchronizationMembers" parameterType="list">
+		insert into tst_member
+		(member_id,create_time,update_time)
+		values
+		<foreach collection="list" item="item" index="index" separator="," >
+		    (#{item.member_id},now(),now())
+    	</foreach>
+	</insert>
+</mapper>

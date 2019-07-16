@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.ShopSettingDao">
+	<select id="getBanners" parameterType="shopBannerBean" resultType="shopBannerBean">
+		select * from tst_banner
+		where is_delete='0'
+		<if test=' banner_type != null and banner_type != "" '>
+			and banner_type = #{banner_type}
+		</if>
+		order by sort desc
+	</select>
+	
+	<select id="getPercentDetail" parameterType="percentBean" resultType="percentBean">
+		select * from tst_percent
+		
+		where  percent_type=#{percent_type}
+	</select>
+</mapper>

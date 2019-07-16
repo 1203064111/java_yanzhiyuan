@@ -1,0 +1,4 @@
+tst/project/utils/BeanUtils.class
+tst/project/utils/WordUtils.class
+tst/project/bean/JDBCBean.class
+tst/project/utils/JDBCUtils.class

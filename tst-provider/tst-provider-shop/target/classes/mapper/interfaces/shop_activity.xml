@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.ShopActivityDao">
+	<select id="getActivityLimits" parameterType="activityBean" resultType="activityBean">
+		select * from tst_activity
+		where is_delete='0' and activity_type='4' and activity_state='1' 
+	</select>
+	
+	<select id="getActivityLimitGoods" parameterType="activityGoodsBean" resultType="activityGoodsBean">
+		select a.* from tst_activity_goods as a 
+		inner join tst_activity as b
+		on a.activity_id=b.activity_id and b.activity_state='1' 
+		and b.activity_type='4' and b.is_delete='0' and now()>b.start_time
+		where a.is_delete='0' 
+		<if test=' activity_id != null and activity_id != "" '>
+			and a.activity_id=#{activity_id}
+		</if>
+	</select>
+</mapper>

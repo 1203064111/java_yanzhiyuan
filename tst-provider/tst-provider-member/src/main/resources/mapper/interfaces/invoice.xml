@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.InvoiceDao">
+	
+	<insert id="insertInvoice" parameterType="invoiceBean" useGeneratedKeys="true" keyProperty="invoice_id">
+		insert into tst_member_invoice
+		(member_id,invoice_type,invoice_name,invoice_no,invoice_company_name,invoice_company_address,invoice_company_phone,
+		invoice_bank_name,invoice_bank_no,invoice_email,create_time,update_time) 
+		values
+		(#{member_id},#{invoice_type},#{invoice_name},#{invoice_no},#{invoice_company_name},
+		#{invoice_company_address},#{invoice_company_phone},#{invoice_bank_name},#{invoice_bank_no},#{invoice_email},now(),now())
+	</insert>
+	
+	<update id="updateInvoice" parameterType="invoiceBean">
+		update tst_member_invoice
+		set update_time = now()
+		<if test=' invoice_type != null and invoice_type != "" '>
+			,invoice_type = #{invoice_type}
+		</if>
+		<if test='invoice_email != null and invoice_email != "" '>
+			,invoice_email = #{invoice_email}
+		</if>
+		<if test='invoice_name != null and invoice_name != "" '>
+			,invoice_name = #{invoice_name}
+		</if>
+		<if test='invoice_no != null and invoice_no != "" '>
+			,invoice_no = #{invoice_no}
+		</if>
+		<if test='invoice_company_name != null and invoice_company_name != "" '>
+			,invoice_company_name = #{invoice_company_name}
+		</if>
+		<if test='invoice_company_address != null and invoice_company_address != "" '>
+			,invoice_company_address = #{invoice_company_address}
+		</if>
+		<if test='invoice_company_phone != null and invoice_company_phone != "" '>
+			,invoice_company_phone = #{invoice_company_phone}
+		</if>
+		<if test='invoice_bank_name != null and invoice_bank_name != "" '>
+			,invoice_bank_name = #{invoice_bank_name}
+		</if>
+		<if test='invoice_bank_no != null and invoice_bank_no != "" '>
+			,invoice_bank_no = #{invoice_bank_no}
+		</if>
+		<if test='is_default != null and is_default != "" '>
+			,is_default = #{is_default}
+		</if>
+		where invoice_id=#{invoice_id} and member_id=#{member_id}
+	</update>
+	
+	<update id="deleteInvoice" parameterType="invoiceBean">
+		update tst_member_invoice 
+		set is_delete = 1
+		where invoice_id = #{invoice_id} and member_id=#{member_id}
+	</update>
+	
+	<select id="getMemberInvoice" parameterType="invoiceBean" resultType="invoiceBean">
+		select * from tst_member_invoice
+		where is_delete = 0
+		and member_id = #{member_id} 
+		<if test='invoice_type != null and invoice_type != "" '>
+			and invoice_type = #{invoice_type}
+		</if>
+	</select>
+	
+	<update id="updateDefaultInvoice" parameterType="invoiceBean">
+		update tst_member_invoice 
+		set is_default=(case when invoice_id=#{invoice_id} then '1' else '0' end)
+		where member_id=#{member_id} and is_delete='0'
+	</update>
+	
+	<select id="getDefaultInvoice" parameterType="invoiceBean" resultType="invoiceBean">
+		select * from tst_member_invoice 
+		where member_id=#{member_id} 
+		and is_default=1 
+		and is_delete=0 
+	</select>
+	
+	<select id="getInvoiceDetail" parameterType="invoiceBean" resultType="invoiceBean">
+		select * from tst_member_invoice 
+		where invoice_id=#{invoice_id}  
+		and is_delete=0 
+	</select>
+	
+</mapper>

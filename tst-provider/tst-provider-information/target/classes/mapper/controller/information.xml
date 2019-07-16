@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.InformationDaoC">
+
+
+	<select id="getMemberReports" parameterType="memberReportBean" resultType="memberReportBean">
+		select * from tst_member_report
+		where is_delete='0'
+		
+		<if test=' report_desc != null and report_desc != "" '>
+			 and report_desc like concat('%',#{report_desc},'%')
+		</if>
+		
+	</select>
+
+
+	<select id="getInformationAssessments" parameterType="informationAssessmentBean"
+		resultType="informationAssessmentBean">
+		select a.*,b.member_nick_name as member_name,c.information_title as information_title from tst_information_assessment as a 
+		inner join tst_member as b 
+		on a.member_id = b.member_id
+		inner join tst_system_information as c 
+		on c.information_id = a.information_id
+		<if test=' information_title != null and information_title != ""  '>
+			and c.information_title like concat('%',#{information_title},'%')
+		</if>
+		<if test=' class_id != null and class_id != ""  '>
+			and c.class_id =#{class_id}
+		</if>
+		where a.is_delete= '0' and a.parent_id is null
+		<if test=' assessment_id != null and assessment_id != ""  '>
+			and a.assessment_id=#{assessment_id}
+		</if>
+		<if test=' assessment_desc != null and assessment_desc != "" '>
+			and a.assessment_desc like concat('%',#{assessment_desc},'%')
+		</if>
+		
+	</select>
+	
+	<update id="updateInformationAssessment" parameterType="informationAssessmentBean">
+		update tst_information_assessment
+		set
+		update_time=now()
+		
+		where assessment_id=#{assessment_id}
+	</update>
+
+	<update id="deleteInformationAssessment" parameterType="informationAssessmentBean">
+		update
+		tst_information_assessment
+		set update_time=now(),is_delete='1'
+		where
+		assessment_id=#{assessment_id}
+	</update>
+	
+	<select id="getInformationAssessmentAnswers" parameterType="informationAssessmentBean"
+		resultType="informationAssessmentBean">
+		select a.*,b.member_nick_name as member_name,c.information_title as information_title from tst_information_assessment as a 
+		inner join tst_member as b 
+		on a.member_id = b.member_id
+		inner join tst_system_information as c 
+		on c.information_id = a.information_id
+		where a.is_delete= '0'
+		<if test=' parent_id != null and parent_id != ""  '>
+			and a.parent_id=#{parent_id}
+		</if>
+		<if test=' assessment_desc != null and assessment_desc != ""  '>
+			and a.assessment_desc like concat('%',#{assessment_desc},'%')
+		</if>
+		
+		
+	</select>
+	
+	<insert id="insertInformation" parameterType="informationBean">
+		insert into tst_information
+		(class_id,information_title,information_desc,information_img,
+		information_url_desc,information_author,information_resource,
+		information_state,create_time,update_time)
+		values
+		(#{class_id},#{information_title},#{information_desc},#{information_img},
+		#{information_url_desc},#{information_author},#{information_resource},
+		#{information_state},now(),now())
+	</insert>
+	
+	<update id="updateInformation" parameterType="informationBean">
+		update tst_information
+		set update_time=now()
+		<if test=' class_id != null and class_id != "" '>
+			,class_id=#{class_id}
+		</if>
+		<if test=' information_title != null and information_title != "" '>
+			,information_title=#{information_title}
+		</if>
+		<if test=' information_desc != null and information_desc != "" '>
+			,information_desc=#{information_desc}
+		</if>
+		<if test=' information_img != null and information_img != "" '>
+			,information_img=#{information_img}
+		</if>
+		<if test=' information_url_desc != null and information_url_desc != "" '>
+			,information_url_desc=#{information_url_desc}
+		</if>
+		<if test=' information_author != null and information_author != "" '>
+			,information_author=#{information_author}
+		</if>
+		<if test=' information_resource != null and information_resource != "" '>
+			,information_resource=#{information_resource}
+		</if>
+		<if test=' information_state != null and information_state != "" '>
+			,information_state=#{information_state}
+		</if>
+		where information_id=#{information_id}
+	</update>
+
+	<update id="deleteInformation" parameterType="informationBean">
+		update tst_information
+		set update_time=now(),
+		is_delete='1'
+		where information_id=#{information_id}
+	</update>
+	
+	<select id="getInformationDetail" parameterType="informationBean" resultType="informationBean">
+		select * from tst_information
+		
+		where information_id=#{information_id}
+	</select>
+	
+	<select id="getInformations" parameterType="informationBean" resultType="informationBean">
+		select * from tst_information
+		where is_delete='0'
+		order by create_time desc
+	</select>
+ 
+	<insert id="insertInformationClass" parameterType="informationClassBean">
+		insert into tst_information_class
+		(class_name,class_state,sort,create_time,update_time)
+		values
+		(#{class_name},#{class_state},
+		
+		IFNULL((select a.sort+1 from (
+		select sort
+		from tst_information_class where is_delete='0'
+		order by sort desc limit 0,1) a),"1"),
+		
+		now(),now())
+	</insert>
+	
+	<update id="updateInformationClass" parameterType="informationClassBean">
+		update tst_information_class
+		set update_time=now()
+		<if test=' class_name != null and class_name != "" '>
+			,class_name=#{class_name}
+		</if>
+		<if test=' class_state != null and class_state != "" '>
+			,class_state=#{class_state}
+		</if>
+		where class_id=#{class_id}
+	</update>
+	
+	<update id="deleteInformationClass" parameterType="informationClassBean">
+		update tst_information_class
+		set update_time=now()
+		,is_delete='1'
+		where class_id=#{class_id} 
+	</update>
+	
+	<select id="getInformationClassDetail" parameterType="informationClassBean" resultType="informationClassBean">
+		select * from tst_information_class
+		where class_id=#{class_id}
+	</select>
+	
+	<select id="getInformationClasss" parameterType="informationClassBean" resultType="informationClassBean">
+		select * from tst_information_class
+		where is_delete='0'
+		order by sort
+	</select>
+	
+	
+	
+	
+	<select id="getSystemInformationClasss" parameterType="systemInformationClassBean" resultType="systemInformationClassBean">
+		select * from tst_system_information_class
+		where is_delete='0'
+		<if test=' create_time != null and create_time != "" '>
+			 and create_time=#{create_time}
+		</if>
+		<if test=' sort != null and sort != "" '>
+			 and sort=#{sort}
+		</if>
+		<if test=' class_name != null and class_name != "" '>
+			 and class_name=#{class_name}
+		</if>
+		<if test=' class_state != null and class_state != "" '>
+			 and class_state=#{class_state}
+		</if>
+		<if test=' class_id != null and class_id != "" '>
+			 and class_id=#{class_id}
+		</if>
+		<if test=' is_delete != null and is_delete != "" '>
+			 and is_delete=#{is_delete}
+		</if>
+	</select>
+	<select id="getSystemInformationClass" parameterType="systemInformationClassBean" resultType="systemInformationClassBean">
+		select * from tst_system_information_class
+		where is_delete='0' 
+		and class_id = #{class_id}
+	</select>
+	<update id="updateSystemInformationClass" parameterType="systemInformationClassBean">
+		update tst_system_information_class
+		set update_time=now()
+	
+		<if test=' sort != null and sort != "" '>
+			 ,sort=#{sort}
+		</if>
+		<if test=' class_name != null and class_name != "" '>
+			 ,class_name=#{class_name}
+		</if>
+		<if test=' class_state != null and class_state != "" '>
+			 ,class_state=#{class_state}
+		</if>
+		<if test=' is_delete != null and is_delete != "" '>
+			 ,is_delete=#{is_delete}
+		</if>
+		
+		where class_id=#{class_id}
+	</update>
+	<insert id="insertSystemInformationClass" parameterType="systemInformationClassBean">
+		
+		insert into 
+		tst_system_information_class(sort,class_name,class_state,update_time,create_time)
+		values(
+		#{sort},#{class_name},#{class_state},now(),now())
+	</insert>
+	<update id="deleteSystemInformationClass" parameterType="systemInformationClassBean">
+		update tst_system_information_class set update_time = now()
+		,is_delete = 1
+		where class_id = #{class_id}
+	</update>
+	
+	
+	
+	
+	
+	
+	<select id="getSystemInformations" parameterType="systemInformationBean" resultType="systemInformationBean">
+		select * from tst_system_information
+		where is_delete='0'
+		<if test=' information_id != null and information_id != "" '>
+			 and information_id=#{information_id}
+		</if>
+		<if test=' member_id != null and member_id != "" '>
+			 and member_id=#{member_id}
+		</if>
+		<if test=' comment_num != null and comment_num != "" '>
+			 and comment_num=#{comment_num}
+		</if>
+		<if test=' information_video != null and information_video != "" '>
+			 and information_video=#{information_video}
+		</if>
+		<if test=' information_author != null and information_author != "" '>
+			 and information_author=#{information_author}
+		</if>
+	
+		<if test=' class_id != null and class_id != "" '>
+			 and class_id=#{class_id}
+		</if>
+		<if test=' information_title != null and information_title != "" '>
+			 and information_title=#{information_title}
+		</if>
+		<if test=' information_resource != null and information_resource != "" '>
+			 and information_resource=#{information_resource}
+		</if>
+		<if test=' information_desc != null and information_desc != "" '>
+			 and information_desc=#{information_desc}
+		</if>
+		<if test=' is_delete != null and is_delete != "" '>
+			 and is_delete=#{is_delete}
+		</if>
+		<if test=' send_num != null and send_num != "" '>
+			 and send_num=#{send_num}
+		</if>
+		<if test=' information_url_desc != null and information_url_desc != "" '>
+			 and information_url_desc=#{information_url_desc}
+		</if>
+		<if test=' read_num != null and read_num != "" '>
+			 and read_num=#{read_num}
+		</if>
+		<if test=' update_time != null and update_time != "" '>
+			 and update_time=#{update_time}
+		</if>
+		<if test=' information_state != null and information_state != "" '>
+			 and information_state=#{information_state}
+		</if>
+		<if test=' information_img != null and information_img != "" '>
+			 and information_img=#{information_img}
+		</if>
+		<if test=' well_num != null and well_num != "" '>
+			 and well_num=#{well_num}
+		</if>
+	</select>
+	<select id="getSystemInformation" parameterType="systemInformationBean" resultType="systemInformationBean">
+		select * from tst_system_information
+		where is_delete='0' 
+		and information_id = #{information_id}
+	</select>
+	<update id="updateSystemInformation" parameterType="systemInformationBean">
+		update tst_system_information
+		set update_time=now()	
+		<if test=' information_video != null and information_video != "" '>
+			 ,information_video=#{information_video}
+		</if>
+		<if test=' create_time != null and create_time != "" '>
+			 ,create_time=DATE_SUB(#{create_time}, INTERVAL 10 DAY),setting_bottom='1'
+		</if>
+	
+		<if test=' class_id != null and class_id != "" '>
+			 ,class_id=#{class_id}
+		</if>
+		<if test=' information_title != null and information_title != "" '>
+			 ,information_title=#{information_title}
+		</if>
+		<if test=' information_resource != null and information_resource != "" '>
+			 ,information_resource=#{information_resource}
+		</if>
+		<if test=' information_desc != null and information_desc != "" '>
+			 ,information_desc=#{information_desc}
+		</if>
+		<if test=' send_num != null and send_num != "" '>
+			 ,send_num=#{send_num}
+		</if>
+		<if test=' information_url_desc != null and information_url_desc != "" '>
+			 ,information_url_desc=#{information_url_desc}
+		</if>
+		<if test=' read_num != null and read_num != "" '>
+			 ,read_num=#{read_num}
+		</if>
+		<if test=' information_state != null and information_state != "" '>
+			 ,information_state=#{information_state}
+		</if>
+		<if test=' information_img != null and information_img != "" '>
+			 ,information_img=#{information_img}
+		</if>
+		<if test=' well_num != null and well_num != "" '>
+			 ,well_num=#{well_num}
+		</if>
+		<if test=' comment_num != null and comment_num != "" '>
+			 ,comment_num=#{comment_num}
+		</if>
+		
+		where information_id=#{information_id}
+	</update>
+	<insert id="insertSystemInformation" parameterType="systemInformationBean">
+		
+		insert into 
+		tst_system_information(member_id,comment_num,information_video,information_author,
+		class_id,information_title,information_resource,information_desc,
+		send_num,information_url_desc,read_num,information_img,well_num,
+		create_time,update_time)
+		values(
+		#{member_id},#{comment_num},#{information_video},#{information_author},
+		#{class_id},#{information_title},#{information_resource},#{information_desc},
+		#{send_num},#{information_url_desc},#{read_num},#{information_img},
+		#{well_num},now(),now())
+	</insert>
+	<update id="deleteSystemInformation" parameterType="systemInformationBean">
+		update tst_system_information set update_time = now()
+		,is_delete = 1
+		where information_id = #{information_id}
+	</update>
+</mapper>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.SettingDaoC">
+
+	<select id="getListTypes" parameterType="listTypeBean" resultType="listTypeBean">
+		select * from tst_system_list_type
+		where is_delete='0' and type_type=#{type_type}
+	</select>
+	
+	<select id="getListShows" parameterType="listShowBean" resultType="listShowBean">
+		select a.*,b.type_name from tst_system_list_show as a
+		left join tst_system_list_type as b on a.list_type=b.type_value and b.is_delete='0'
+		where  a.is_delete=0	
+		<if test=' list_type != null and list_type != "" '>
+			and a.list_type=#{list_type}
+		</if>
+		order by a.sort asc
+	</select>
+
+	<resultMap id="cityList" type="cityBean"> 
+		<result column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="parent_id" property="parent_id"/>
+		<result column="full_pinyin" property="full_pinyin"/>
+		<result column="first_pingyin" property="first_pingyin"/>
+		<result column="create_time" property="create_time"/>
+        <association property="cityBeans"  resultMap="cityList2">
+        </association>  
+    </resultMap>
+    
+    <resultMap id="cityList2" type="cityBean">
+    	<result column="id2" property="id"/>
+		<result column="name2" property="name"/>
+		<result column="parent_id2" property="parent_id"/>
+		<result column="full_pinyin2" property="full_pinyin"/>
+		<result column="first_pingyin2" property="first_pingyin"/>
+		<result column="create_time2" property="create_time"/>
+		<association property="cityBeans"  resultMap="cityList3">
+        </association>  
+    </resultMap>
+    
+    <resultMap id="cityList3" type="cityBean">
+    	<result column="id3" property="id"/>
+		<result column="name3" property="name"/>
+		<result column="parent_id3" property="parent_id"/>
+		<result column="full_pinyin3" property="full_pinyin"/>
+		<result column="first_pingyin3" property="first_pingyin"/>
+		<result column="create_time3" property="create_time"/>
+    </resultMap>
+    
+    <select id="getAdvices" parameterType="adviceBean" resultType="adviceBean">
+    	select * from tst_advice 
+    	where is_delete='0'
+    </select>
+    
+	<select id="getCitys" parameterType="cityBean" resultMap="cityList">
+		select a.id,a.name,a.parent_id,a.create_time,a.first_pingyin,a.full_pinyin,
+		b.id as id2,b.name as name2,b.parent_id as parent_id2,b.create_time as create_time2,b.first_pingyin as first_pingyin2,b.full_pinyin as full_pinyin2,
+		c.id as id3,c.name as name3,c.parent_id as parent_id3,c.create_time as create_time2,c.first_pingyin as first_pingyin3,c.full_pinyin as full_pigyin3 
+		
+		from tst_city as a
+		left join tst_city as b 
+		on b.parent_id=a.id and b.is_delete='0'
+		left join tst_city as c
+		on c.parent_id=b.id and c.is_delete='0'
+		
+		where a.parent_id='-1' and a.is_delete='0'
+	</select>
+	
+	
+	<select id="getCityHots" parameterType="cityHotBean" resultType="cityHotBean">
+		select * from tst_city_hot
+		where is_delete = 0 
+		order by create_time desc
+	</select>
+	
+	<select id="getCityOutHots" parameterType="cityBean" resultMap="cityList">
+		select a.id,a.name,a.parent_id,a.create_time,a.first_pingyin,a.full_pinyin,
+		b.id as id2,b.name as name2,b.parent_id as parent_id2,b.create_time as create_time2,b.first_pingyin as first_pingyin2,b.full_pinyin as full_pinyin2
+		
+		from tst_city as a
+		left join tst_city as b 
+		on b.parent_id=a.id and b.is_delete='0'
+		left join tst_city_hot as c 
+		on b.id = c.city_id and c.is_delete = 0
+		
+		where a.parent_id='-1' and a.is_delete='0' and c.hot_city_id is null
+	</select>
+	
+	<insert id="insertCityHot" parameterType="cityHotBean">
+		insert into tst_city_hot
+		(city_id,city_name,create_time,update_time)
+		select id as city_id,name as city_name,now(),now() from tst_city 
+		where name = #{city_name} and parent_id != -1
+	</insert>
+	
+	<update id="deleteCityHot" parameterType="cityHotBean">
+		update tst_city_hot 
+		set update_time = now()
+		,is_delete = 1
+		where hot_city_id = #{hot_city_id}
+	</update>
+	
+	<select id="getOneCitys" parameterType="cityBean" resultType="cityBean">
+		select * from tst_city
+		where parent_id=#{parent_id} and is_delete='0'
+	</select>
+
+	<insert id="insertHtml" parameterType="htmlBean">
+		insert into tst_system_html
+		(html_name,html_url_desc,type,create_time,update_time)
+		values
+		(#{html_name},#{html_url_desc},#{type},now(),now())
+	</insert>
+	
+	<update id="updateHtml" parameterType="htmlBean">
+		update tst_system_html
+		set update_time=now()
+		<if test=' html_name != null and html_name != "" '>
+			,html_name=#{html_name}
+		</if>
+		<if test=' html_url_desc != null and html_url_desc != "" '>
+		   ,html_url_desc=#{html_url_desc}
+		</if>
+		
+		where html_id=#{html_id}
+	</update>
+	<update id="deleteHtml" parameterType="htmlBean">
+		update tst_system_html
+		set is_delete='1'
+		where html_id=#{html_id}
+	</update>
+	<select id="getHtmlDetail" parameterType="htmlBean" resultType="htmlBean">
+		select * from tst_system_html
+		where is_delete='0'
+		 and html_id=#{html_id}
+	</select>
+	<select id="getHtmls" parameterType="htmlBean" resultType="htmlBean">
+		select * from tst_system_html
+		where is_delete='0'
+		<if test=' type != null and type != "" '>
+			and type=#{type}
+		</if>
+		order by create_time desc
+	</select>
+	<select id="getMsgTypes" parameterType="msgTypeBean" resultType="msgTypeBean">
+	select * from tst_msg_type
+	where 1=1 and is_delete='0'
+	</select>
+	<update id="updateMsgType" parameterType="msgTypeBean">
+	update tst_msg_type
+	set 
+	update_time=now(),
+	msg_state=#{msg_state},
+	msg_desc=#{msg_desc}
+	where 1=1 and type_id=#{type_id}
+	</update>
+	
+</mapper>

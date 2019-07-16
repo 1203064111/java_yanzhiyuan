@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.CreditGradesDaoC">
+	
+	
+	
+	
+	
+	<select id="getMemberLevels" parameterType="memberLevelBean" resultType="memberLevelBean">
+		select * from tst_member_level 
+		where is_delete = 0 
+		order by level_min_price
+	</select>
+	
+	<select id="getMemberLevelDetail" parameterType="memberLevelBean" resultType="memberLevelBean">
+		select * from tst_member_level 
+		where is_delete = 0
+		and level_id = #{level_id}
+	</select>
+	
+	<insert id="insertMemberLevel" parameterType="memberLevelBean">
+		insert into tst_member_level(level_name,level_min_price,create_time,update_time)
+		values
+		(#{level_name},#{level_min_price},now(),now())
+	</insert>
+	
+	<update id="updateMemberLevel" parameterType="memberLevelBean">
+		update tst_member_level
+		set update_time = now()
+		,level_name = #{level_name}
+		,level_min_price = #{level_min_price}
+		where level_id = #{level_id}
+	</update>
+	
+	<update id="deleteMemberLevel" parameterType="memberLevelBean">
+		update tst_member_level
+		set update_time = now()
+		,is_delete = 1
+		where level_id = #{level_id}
+	</update>
+	
+	<select id="getMemberBillTotal" parameterType="memberBillBean" resultType="memberBillBean">
+		select member_id,sum(case when find_in_set(bill_type,'1,4,5') 
+		then -bill_price else bill_price end) as bill_price
+		from tst_member_bill where is_delete = 0
+		group by member_id
+	</select>
+	
+	<select id="getMemberCreditBillTotal" parameterType="memberCreditBillBean" resultType="memberCreditBillBean">
+		select member_id,sum(case when find_in_set(credit_bill_type,'2,3') 
+		then -credit_bill_price end) as credit_bill_price
+		from tst_member_credit_bill where is_delete = 0
+		group by member_id
+	</select>
+	
+	<select id="getMemberCounts" parameterType="memberCreditBillBean" resultType="memberCreditBillBean">
+	 	select * from tst_member_credit_bill
+		where is_delete = 0 
+		and member_id = #{member_id}
+		order by create_time desc
+	 </select>
+	
+	<select id="getMemberCredits" parameterType="shopMemberBean" resultType="shopMemberBean">
+		select * from tst_member 
+		where is_delete = 0 and credit_state = 1 
+		<if test=' member_id != null and member_id != "" '>
+			and member_id like concat('%',#{member_id},'%')
+		</if>
+		<if test=' credit_grades != null and credit_grades != "" '>
+			and credit_grades = #{credit_grades}
+		</if>
+	</select>
+	
+	<select id="getMemberCreditDetail" parameterType="shopMemberBean" resultType="shopMemberBean">
+		select * from tst_member 
+		where is_delete = 0 
+		and member_id = #{member_id}
+	</select>
+	
+	<select id="getCreditGradess" parameterType="creditGradesBean" resultType="creditGradesBean">
+		select * from tst_member_credit_grades 
+		where is_delete = 0
+		order by credit_grades
+	</select>
+	
+	<select id="getCreditGradesDetail" parameterType="creditGradesBean" resultType="creditGradesBean">
+		select * from tst_member_credit_grades 
+		where is_delete = 0 and credit_id = #{credit_id}
+	</select>
+	
+	<insert id="insertCreditGrades" parameterType="creditGradesBean" useGeneratedKeys="true" keyProperty="credit_id">
+		insert tst_member_credit_grades(credit_grades,credit_balance,create_time,update_time)
+		values
+		(#{credit_grades},#{credit_balance},now(),now())
+	</insert>
+	
+	
+	<update id="updateCreditGrades" parameterType="creditGradesBean">
+		update tst_member_credit_grades 
+		set update_time = now() 
+		<if test=' credit_grades != null and credit_grades != "" '>
+			,credit_grades = #{credit_grades}
+		</if>
+		<if test=' credit_balance != null and credit_balance != "" '>
+			,credit_balance = #{credit_balance}
+		</if>
+		where credit_id = #{credit_id}
+	</update>
+	
+	<update id="deleteCreditGrades" parameterType="creditGradesBean">
+		update tst_member_credit_grades 
+		set update_time = now() 
+		,is_delete = 1
+		where credit_id = #{credit_id}
+	</update>
+	
+		
+	
+	
+	
+	
+</mapper>

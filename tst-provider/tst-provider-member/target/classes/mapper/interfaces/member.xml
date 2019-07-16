@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.MemberDao">
+	<select id="getPercentDetail" parameterType="percentBean" resultType="percentBean">
+		select * from tst_percent
+		where is_delete ='0' and percent_type=#{percent_type}
+	</select>
+	<select id="getTaskClasses" parameterType="taskClassBean" resultType="taskClassBean">
+		select * from tst_task_class 
+		where is_delete = '0'
+		order by sort asc
+	</select>
+	
+	<select id="getTaskClass" parameterType="taskClassBean" resultType="taskClassBean">
+		select * from tst_task_class 
+		where is_delete = '0'
+		<if test=' class_type != null and class_type != "" '>
+			and  class_type=#{class_type}
+		</if>
+		<if test=' class_id != null and class_id != "" '>
+			and  class_id=#{class_id}
+		</if>
+	</select>
+
+	<update id="updateMemberTask" parameterType="memberTaskBean">
+		update tst_member_task
+		set update_time=now(),last_modify_time=now()
+		
+		where is_delete ='0'
+		<if test=' member_id != null and member_id != "" '>
+			and  member_id=#{member_id}
+		</if>
+		<if test=' task_type != null and task_type != "" '>
+			and  task_type=#{task_type}
+		</if>
+		<if test=' task_id != null and task_id != "" '>
+			and  task_id=#{task_id}
+		</if>
+	</update>
+
+	<insert id="insertMemberTask" parameterType="memberTaskBean" useGeneratedKeys="true" keyProperty="sign_id">
+		insert into 
+		tst_member_task(member_id,task_type,task_state,count,last_modify_time,create_time,update_time)
+		values(#{member_id},#{task_type},#{task_state},#{count},now(),now(),now())
+	</insert>
+	<select id="getSystemInformationShareCount" parameterType="shareRelationBean" resultType="Map">
+		select count(*) as total_count from tst_share_relation 
+		 where is_delete = '0' and to_days(create_time) = to_days(now())
+		<if test=' member_id != null and member_id != "" '>
+			and  member_id=#{member_id}
+		</if>
+	</select>
+	<select id="getSystemInformationAnswerCount" parameterType="informationAssessmentBean" resultType="Map">
+		select count(*) as total_count from tst_information_assessment 
+		 where is_delete = '0' and to_days(create_time) = to_days(now())
+		<if test=' member_id != null and member_id != "" '>
+			and  member_id=#{member_id}
+		</if>
+	</select>
+	
+	<select id="getSystemInformationCount" parameterType="systemInformationBean" resultType="Map">
+		select count(*) as total_count from tst_system_information 
+		 where is_delete = '0' and to_days(create_time) = to_days(now())
+		<if test=' member_id != null and member_id != "" '>
+			and  member_id=#{member_id}
+		</if>
+	</select>
+	<select id="getRequirePositionByMember" parameterType="requirePositionBean" resultType="requirePositionBean">
+		select * from tst_require_position
+		where  is_delete = '0' 
+		<if test=' member_id != null and member_id != "" '>
+			and  member_id=#{member_id}
+		</if> 
+		
+		limit 0,1
+	</select>
+	<select id="getTaskByMember" parameterType="memberTaskBean" resultType="memberTaskBean">
+		select * from tst_member_task
+		where  is_delete = '0' 
+		<if test=' member_id != null and member_id != "" '>
+			and  member_id=#{member_id}
+		</if> 
+		<if test=' task_type != null and task_type != "" '>
+			and task_type =#{task_type}
+		</if>
+		<if test=' task_id != null and task_id != "" '>
+			and task_id =#{task_id}
+		</if>
+	</select>
+
+	<insert id="insertMemberSign" parameterType="memberSignBean" useGeneratedKeys="true" keyProperty="sign_id">
+		insert into 
+		tst_member_sign(member_id,last_modify_time,create_time,update_time)
+		values(#{member_id},now(),now(),now())
+	</insert>
+	
+	<update id="updateMemberSign" parameterType="memberSignBean">
+		update tst_member_sign
+		set update_time=now(),last_modify_time=now()
+		<if test=' count != null and count != "" '>
+			, count =#{count}
+		</if>
+		where sign_id =#{sign_id}
+	</update>
+
+	<select id="getMemberSignByMemberId" parameterType="memberSignBean" resultType="memberSignBean">
+		select * from tst_member_sign 
+		where  is_delete = '0' and  member_id=#{member_id}
+	</select>
+	
+	<update id="updateSynchronizationMembers" parameterType="String">
+		update
+		tst_member
+		set update_time=now(),is_synchronization='1'
+		where
+		FIND_IN_SET(member_id,#{member_ids})
+	</update>
+	
+	<select id="getMembers" parameterType="memberBean"
+		resultType="memberBean">
+		select * from tst_member
+		where 1=1 and is_delete='0'
+		<if test="member_ids!=null and member_ids!=''">
+			and !find_in_set(member_id,#{member_ids})
+			ORDER BY RAND() LIMIT 10
+		</if>
+	</select>
+
+	<select id="getSynchronizationMembers"
+		parameterType="memberBean" resultType="memberBean">
+		select * from tst_member
+		where is_delete='0' and is_synchronization='0'
+	</select>
+
+
+	<select id="getMemberMsgDetail" parameterType="memberMsgBean"
+		resultType="memberMsgBean">
+		select * from tst_member_msg
+		where msg_id=#{msg_id} and
+		is_delete='0'
+	</select>
+
+	<update id="updateMemberIntegralOrderDetail"
+		parameterType="memberIntegralOrderBean">
+		update tst_member_integral_order
+		set update_time=now()
+		<if test=' order_state != null and order_state != "" '>
+			,order_state=#{order_state}
+		</if>
+		<if test=' transaction_id != null and transaction_id != "" '>
+			,transaction_id=#{transaction_id}
+		</if>
+		<if test=' out_trade_no != null and out_trade_no != "" '>
+			,out_trade_no=#{out_trade_no}
+		</if>
+		<if test=' sign != null and sign != "" '>
+			,sign=#{sign}
+		</if>
+		<if test=' cash_fee != null and cash_fee != "" '>
+			,cash_fee=#{cash_fee}
+		</if>
+		<if test=' pay_time != null and pay_time != "" '>
+			,pay_time=#{pay_time}
+		</if>
+		where 1=1
+		<if test=' order_id != null and order_id != "" '>
+			and order_id=#{order_id}
+		</if>
+	</update>
+
+	<update id="payPassword" parameterType="memberBean">
+		update tst_member
+		set update_time=now()
+		,pay_password=#{pay_password}
+		where 1=1
+		<if test=' member_id != null and member_id != "" '>
+			and member_id=#{member_id}
+		</if>
+
+		<if test=' member_account != null and member_account != "" '>
+			and member_account=#{member_account}
+		</if>
+	</update>
+
+	<select id="getMemberIntegralOrderDetail"
+		parameterType="memberIntegralOrderBean"
+		resultType="memberIntegralOrderBean">
+		select * from tst_member_integral_order
+		where 1=1
+		<if test=' order_no != null and order_no != "" '>
+			and order_no=#{order_no}
+		</if>
+	</select>
+
+	<insert id="insertMemberIntegralOrder"
+		parameterType="memberIntegralOrderBean">
+		insert into tst_member_integral_order
+		(order_no,member_id,order_integral,order_price,
+		pay_way,pay_charge,create_time,update_time)
+		values
+		(#{order_no},#{member_id},#{order_integral},#{order_price},
+		#{pay_way},#{pay_charge},now(),now())
+	</insert>
+
+	<update id="updateMemberDetail" parameterType="memberBean">
+		update tst_member
+		set update_time=now()
+		<if test=' is_buy != null and is_buy != "" '>
+			,is_buy = #{is_buy},buy_time=now()
+		</if>
+		<if test=' is_new_coupon != null and is_new_coupon != "" '>
+			,is_new_coupon = #{is_new_coupon}
+		</if>
+		<if test=' member_img != null and member_img != "" '>
+			,member_img = #{member_img}
+		</if>
+		<if
+			test=' alipay_app_open_id != null and alipay_app_open_id != "" '>
+			,alipay_app_open_id = #{alipay_app_open_id}
+		</if>
+		<if
+			test=' weixin_app_open_id != null and weixin_app_open_id != "" '>
+			,weixin_app_open_id = #{weixin_app_open_id}
+		</if>
+		<if test=' qq_open_id != null and qq_open_id != "" '>
+			, qq_open_id=#{qq_open_id}
+		</if>
+		<if test=' weibo_open_id != null and weibo_open_id != "" '>
+			, weibo_open_id=#{weibo_open_id}
+		</if>
+		<if
+			test=' weixin_lite_open_id != null and weixin_lite_open_id != "" '>
+			,weixin_lite_open_id = #{weixin_lite_open_id}
+		</if>
+		<if test=' member_real_name != null and member_real_name != "" '>
+			,member_real_name = #{member_real_name}
+		</if>
+		<if test="member_card_no!=null and member_card_no!=''">
+			,member_card_no=#{member_card_no}
+		</if>
+
+		<if test=' member_nick_name != null and member_nick_name != "" '>
+			,member_nick_name = #{member_nick_name}
+		</if>
+
+		
+		<if test=' member_birthday != null and member_birthday != "" '>
+			,member_birthday = #{member_birthday}
+		</if>
+
+		<if test=' member_sex != null and member_sex != "" '>
+			,member_sex = #{member_sex}
+		</if>
+		<if test=' member_address != null and member_address != "" '>
+			,member_address = #{member_address}
+		</if>
+		<if test=' member_age != null and member_age != "" '>
+			,member_age = #{member_age}
+		</if>
+
+		<if test=' member_password != null and member_password != "" '>
+			,member_password = #{member_password}
+		</if>
+
+		<if test=' member_token != null and member_token != "" '>
+			,member_token=#{member_token}
+		</if>
+		<if test=' member_integral != null and member_integral != "" '>
+			,member_integral=#{member_integral}
+		</if>
+		<if test=' pay_treasure != null and pay_treasure != "" '>
+			,pay_treasure = #{pay_treasure}
+		</if>
+		<if test=' bank_name != null and bank_name != "" '>
+			,bank_name = #{bank_name}
+		</if>
+		<if test=' bank_line != null and bank_line != "" '>
+			,bank_line = #{bank_line}
+		</if>
+		<if test=' bank_card != null and bank_card != "" '>
+			,bank_card = #{bank_card}
+		</if>	
+		<if test=' jiguang_token != null and jiguang_token != "" '>
+			,jiguang_token = #{jiguang_token}
+		</if>	
+		<if test=' role_type != null and role_type != "" '>
+			,role_type = #{role_type}
+		</if>	
+		<if test=' consume_basic != null and consume_basic != "" '>
+			,consume_basic = #{consume_basic}
+		</if>
+		<if test=' pay_account != null and pay_account != "" '>
+			,pay_account = #{pay_account}
+		</if>
+		<if test=' shop_pay_account != null and shop_pay_account != "" '>
+			,shop_pay_account = #{shop_pay_account}
+		</if>
+		<if test=' goods_monnaie != null and goods_monnaie != "" '>
+			,goods_monnaie = #{goods_monnaie}
+		</if>	
+		<if test=' goods_stock != null and goods_stock != "" '>
+			,goods_stock = #{goods_stock}
+		</if>
+		<where>
+			<if test=' member_id != null and member_id != "" '>
+				member_id=#{member_id}
+			</if>
+
+			<if test=' member_account != null and member_account != "" '>
+				and member_account=#{member_account}
+			</if>
+		</where>
+	</update>
+
+	<update id="updateMemberIntegral" parameterType="memberBean">
+		update
+		tst_member
+		set update_time=now(),member_integral=#{member_integral}
+		where member_id=#{member_id}
+	</update>
+
+	<insert id="registerMember" parameterType="memberBean"
+		useGeneratedKeys="true" keyProperty="member_id">
+		insert into tst_member
+		(weixin_open_id,weixin_lite_open_id,weixin_app_open_id,member_type,member_account,member_token,member_password,hx_account
+		,hx_password,hx_nick_name,tengxun_im_account
+		,create_time,update_time
+		,invitation_code,fill_invitation_code,
+		alipay_app_open_id,weixin_pub_open_id)
+		values
+		(#{weixin_open_id},#{weixin_lite_open_id},#{weixin_app_open_id},#{member_type},#{member_account},#{member_token},#{member_password},#{hx_account}
+		,#{hx_password},#{hx_nick_name},#{tengxun_im_account}
+		,now(),now()
+		,uuid(),#{fill_invitation_code},
+		#{alipay_app_open_id},#{weixin_pub_open_id})
+	</insert>
+
+	<select id="getMemberDetail" parameterType="memberBean"
+		resultType="memberBean">
+		select * from tst_member
+		where 1=1
+		<if test=' is_delete == null or  is_delete == "" '>
+			and is_delete='0'
+		</if>
+		<if test=' is_delete != null and  is_delete != "" '>
+			and is_delete=#{is_delete}
+		</if>
+		<if test="member_card_no!=null and member_card_no!=''">
+			and member_card_no=#{member_card_no}
+		</if>
+		<if test=' weixin_open_id != null and weixin_open_id != "" '>
+			and weixin_open_id=#{weixin_open_id}
+		</if>
+		<if
+			test=' weixin_pub_open_id != null and weixin_pub_open_id != "" '>
+			and weixin_pub_open_id=#{weixin_pub_open_id}
+		</if>
+		<if
+			test=' weixin_lite_open_id != null and weixin_lite_open_id != "" '>
+			and weixin_lite_open_id=#{weixin_lite_open_id}
+		</if>
+		<if
+			test=' weixin_app_open_id != null and weixin_app_open_id != "" '>
+			and weixin_app_open_id=#{weixin_app_open_id}
+		</if>
+		<if
+			test=' alipay_app_open_id != null and alipay_app_open_id != "" '>
+			and alipay_app_open_id=#{alipay_app_open_id}
+		</if>
+		<if test=' qq_open_id != null and qq_open_id != "" '>
+			and qq_open_id=#{qq_open_id}
+		</if>
+		<if test=' weibo_open_id != null and weibo_open_id != "" '>
+			and weibo_open_id=#{weibo_open_id}
+		</if>
+		
+		<if test=' member_account != null and member_account != "" '>
+			and member_account=#{member_account}
+		</if>
+		<if test=' invitation_code != null and invitation_code != "" '>
+			and invitation_code=#{invitation_code}
+		</if>
+		<if test=' member_type != null and member_type != "" '>
+			and member_type=#{member_type}
+		</if>
+		<if test=' member_password != null and member_password != "" '>
+			and member_password=#{member_password}
+		</if>
+		<if test=' member_id != null and member_id != ""  and member_id!=0 '>
+			and member_id=#{member_id}
+		</if>
+		<if test=' member_state != null and member_id != ""  and member_state '>
+			and member_state=#{member_state}
+		</if>
+	</select>
+
+	<insert id="insertBankCard" parameterType="BankCardBean">
+		insert into
+		tst_member_bank_card
+		(member_id,member_name,member_mobile,bank_name,
+		bank_card_number,bank_card_type,create_time,update_time)
+		values
+		(#{member_id},#{member_name},#{member_mobile},#{bank_name},
+		#{bank_card_number},#{bank_card_type},now(),now())
+	</insert>
+
+	<update id="deleteBankCard" parameterType="BankCardBean">
+		update
+		tst_member_bank_card
+		set update_time = now(),is_delete = 1
+		where
+		card_id
+		= #{card_id}
+		and
+		member_id = #{member_id}
+	</update>
+
+	<select id="getBankCards" parameterType="BankCardBean"
+		resultType="BankCardBean">
+		select * from tst_member_bank_card
+		where is_delete = 0
+		and
+		member_id = #{member_id}
+	</select>
+
+	<select id="getBankCardDetail" parameterType="BankCardBean"
+		resultType="BankCardBean">
+		select * from tst_member_bank_card
+		where is_delete = 0
+		and
+		card_id = #{card_id}
+		and
+		member_id = #{member_id}
+	</select>
+
+	<update id="updateBankCardDetail" parameterType="BankCardBean">
+		update tst_member_bank_card
+		set update_time = now()
+		<if test=' member_name != null and member_name != "" '>
+			,member_name = #{member_name}
+		</if>
+
+		<if test=' member_mobile != null and member_mobile != "" '>
+			,member_mobile = #{member_mobile}
+		</if>
+
+		<if test=' bank_name != null and bank_name != "" '>
+			,bank_name = #{bank_name}
+		</if>
+
+		<if test=' bank_card_number != null and bank_card_number != "" '>
+			,bank_card_number = #{bank_card_number}
+		</if>
+
+		<if test=' bank_card_type != null and bank_card_type != "" '>
+			,bank_card_type = #{bank_card_type}
+		</if>
+		where
+		card_id = #{card_id}
+
+	</update>
+	<select id="getMemberMsgsDetail" parameterType="memberMsgBean"
+		resultType="memberMsgBean">
+		select * from tst_member_msg
+		where 1=1 and is_delete='0'
+		and
+		msg_id=#{msg_id}
+	</select>
+	<select id="getMsgCount" parameterType="memberMsgBean"
+		resultType="map">
+		select count(*) as msg_total_count ,
+		(
+		case when sum(case when
+		msg_type = 'order' then 1
+		else 0 end) is null
+		then 0 else
+		sum(case
+		when msg_type = 'order' then 1 else 0 end) end) as
+		order_count,
+		
+		(
+		case when sum(case when
+		msg_type = 'system' then 1
+		else 0 end) is null
+		then 0 else
+		sum(case
+		when msg_type = 'system' then 1 else 0 end) end) as
+		system_count,
+		
+		(
+		case when sum(case when
+		msg_type = 'farm' then 1
+		else 0 end) is null
+		then 0 else
+		sum(case
+		when msg_type = 'farm' then 1 else 0 end) end) as
+		farm_count,
+
+		(
+		case when sum(case when
+		msg_type = 'logistic' then 1
+		else 0 end) is null
+		then 0 else
+		sum(case
+		when msg_type = 'logistic' then 1 else 0 end) end)
+		as logistic_count
+
+		from tst_member_msg
+		where is_delete='0'
+		and member_id=#{member_id}
+		and is_read='0'
+
+
+	</select>
+	<select id="getMemberMsgs" parameterType="memberMsgBean"
+		resultType="memberMsgBean">
+		select * from tst_member_msg
+		where 1=1 and is_delete='0'
+		<if test=' msg_type != null and msg_type != "" '>
+			and FIND_IN_SET(msg_type,#{msg_type})
+		</if>
+		<if test="is_read!=null and is_read!=''">
+			and is_read=#{is_read}
+		</if>
+		<if test="member_id!=null and member_id!=''">
+			and member_id=#{member_id}
+		</if>
+		order by create_time desc
+	</select>
+	<insert id="insertMemberMsg" parameterType="memberMsgBean">
+		insert into tst_member_msg
+		(member_id,msg_title,msg_desc,
+		msg_type,order_id,order_no,
+		create_time,update_time)
+		values
+		(#{member_id},#{msg_title},#{msg_desc}
+		,#{msg_type},#{order_id},#{order_no}
+		,now(),now()
+		)
+	</insert>
+	<select id="getMsgType" parameterType="msgTypeBean"
+		resultType="msgTypeBean">
+		select * from tst_msg_type
+		where 1=1 and msg_type=#{msg_type}
+	</select>
+	<update id="updateMemberMsgDetail" parameterType="memberMsgBean">
+		update tst_member_msg
+		set update_time=now()
+		<if test="is_read!=null and is_read!=''">
+			,is_read=#{is_read}
+		</if>
+		where 1=1 and msg_id=#{msg_id}
+	</update>
+
+
+</mapper>

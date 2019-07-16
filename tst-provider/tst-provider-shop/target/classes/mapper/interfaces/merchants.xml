@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.MerchantsDao">
+	
+	
+	
+	<insert id="attentionMerchantsOrGoods" parameterType="memberAttentionBean">
+		insert into tst_member_attention(member_id,attention_id,attention_type,
+		create_time,update_time)
+		values
+		(
+			#{member_id},#{attention_id},#{attention_type},now(),now()
+		)
+	</insert>
+	
+	<update id="cancelAttentionMerchantsOrGoods" parameterType="memberAttentionBean">
+		update tst_member_attention set update_time = now()
+		,is_delete = 1
+		where member_attention_id = #{member_attention_id} and member_id = #{member_id}
+	</update>
+	
+	<select id="getMemberAttentions" parameterType="memberAttentionBean" resultType="memberAttentionBean">
+		select * from tst_member_attention
+		where is_delete = 0 
+		and member_id = #{member_id} and attention_type = #{attention_type}
+	</select>
+	
+	<select id="getRecommendMerchantss" parameterType="merchantsBean" resultType="merchantsBean">
+		select a.* from tst_merchants as a
+		inner join tst_goods as b
+		on a.merchants_id=b.merchants_id
+		and b.is_delete='0' and b.goods_state='1'
+		and b.apply_state='1'
+		inner join tst_goods_marketing as c
+		on b.goods_id=c.goods_id and c.marketing_type='2'  and c.is_delete='0'
+		where a.is_delete='0' and a.merchants_state='1'
+		group by merchants_id
+	</select>
+	
+	<select id="getMerchantsRecomendGoodss" parameterType="goodsBean" resultType="goodsBean">
+		select b.*,a.sort as sort1 from tst_goods_marketing as a
+		inner join tst_goods as b
+		on a.goods_id=b.goods_id and b.is_delete='0' and b.goods_state='1'
+		and b.apply_state='1'
+		and b.merchants_id=#{merchants_id}
+		where a.marketing_type='2'  and a.is_delete='0'
+		order by a.sort1 desc
+	</select>
+	
+	<select id="getMerchantss" parameterType="merchantsBean" resultType="merchantsBean">
+		select *
+		<if test=' latitude != null and latitude != "" and longitude != "" and longitude != null '>
+			,(6371.393 * ACOS(
+			COS(RADIANS(#{latitude})) * COS(RADIANS(latitude)) * COS(RADIANS(#{longitude} - longitude))
+			+ SIN(RADIANS(#{latitude})) * SIN(RADIANS(latitude))
+				)
+		) AS distance
+		</if>
+		
+		 from tst_merchants
+		
+		where is_delete='0' and apply_state = '1'
+		<if test=' merchants_type != null and merchants_type != "" '>
+			and merchants_type = #{merchants_type}
+		</if>
+		
+		<if test=' merchants_province != null and merchants_province != "" '>
+			and merchants_province = #{merchants_province}
+		</if>
+		<if test=' merchants_city != null and merchants_city != "" '>
+			and merchants_city = #{merchants_city}
+		</if>
+		<if test=' merchants_country != null and merchants_country != "" '>
+			and merchants_country = #{merchants_country}
+		</if>
+		<if test=' sort == "auto" '>
+			order by create_time desc
+			
+		</if>
+		<if test=' sort == "case" '>
+			order by case_num desc
+	
+		</if>
+		<if test=' sort == "star" '>
+			order by comment_star desc
+	
+		</if>
+		<if test=' latitude != null and latitude != "" and longitude != "" and longitude != null '>
+			order by distance
+			<if test=' sort == "short" '>
+			asc
+			</if>
+		</if>
+		
+	</select>
+	
+	<select id="getMemberAttentionMerchants" parameterType="merchantsBean" resultType="merchantsBean">
+		select * from tst_merchants
+		
+		where is_delete='0'
+		and find_in_set(merchants_id,#{merchants_ids})
+	</select>
+
+	<select id="getMerchantsDetail" parameterType="merchantsBean" resultType="merchantsBean">
+		select * from tst_merchants
+		where is_delete='0' and merchants_id=#{merchants_id}
+		<if test=' merchants_type != null and merchants_type != "" '>
+			and merchants_type = #{merchants_type}
+		</if>
+	</select>
+	<select id="getMerchantsGoodsClasses" parameterType="merchantsGoodsClassBean" resultType="merchantsGoodsClassBean">
+		select a.*,b.class_name as goods_class_name from tst_merchants_goods_class as a 
+		inner join tst_goods_class as b 
+		on b.class_id = a.goods_class_id and b.is_delete = '0'
+		left join tst_goods as c 
+		on c.class_id = a.goods_class_id  and  a.merchants_id = c.merchants_id and c.is_delete = '0'
+		where a.is_delete='0' and c.goods_id is not null and a.merchants_id=#{merchants_id}
+		<if test=' merchants_type != null and merchants_type != "" '>
+			and a.merchants_type = #{merchants_type}
+		</if>
+		group by a.merchants_goods_class_id
+	</select>
+	<select id="getGoodsByMerchantsAndClass" parameterType="goodsBean" resultType="goodsBean">
+		select a.* from tst_goods as a 
+		where a.is_delete='0' and a.goods_type = '1' and a.goods_state = '1'
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id = #{merchants_id}
+		</if>
+		<if test=' class_id != null and class_id != "" '>
+			and a.class_id = #{class_id}
+		</if>
+	</select>
+	
+	
+	
+</mapper>

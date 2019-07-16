@@ -1,0 +1,1094 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.OrderDaoC">
+
+
+	<select id="exportFinalAdvertiseOrders" parameterType="advertiseOrderBean" resultType="Map">
+		select a.order_no,a.create_time,a.pay_way,
+		a.order_pay_second,a.advertise_order_total,a.mobile,
+		a.position_id,c.position_title,a.material_id,b.material_name,c.position_provider,
+		c.position_city,c.position_country,
+		(case when "1"=a.order_type then "定金订单"
+					when "2"=a.order_type then "支付订单"
+					else "未知订单" end) order_type_show,
+		(case when "0"=a.pay_type then "线上"
+					when "1"=a.pay_type then "线下"
+					else "未知" end) pay_type_show
+		
+		from tst_advertise_order a
+		
+		left join tst_material b 
+		on a.material_id = b.material_id 
+		
+		left join tst_position c 
+		on a.position_id = c.position_id  
+		
+		where  a.is_delete ='0'
+		<if test= ' order_type != null and order_type != "" '>
+	 		and a.order_type = #{order_type} 
+	 	</if>
+	 	<if test= ' order_state != null and order_state != "" '>
+	 		and a.order_state = #{order_state} 
+	 	</if>	
+		<if test= ' order_no !=null and order_no != "" '>
+	 		and a.order_no like concat('%',#{order_no},'%')
+	 	</if>	
+	 	<if test= ' pay_type !=null and pay_type != "" '>
+	 		and a.pay_type = #{pay_type} 
+	 	</if>
+	 		
+		group by a.create_time desc
+	</select>
+	<select id="exportAdverOrders" parameterType="advertiseOrderBean" resultType="Map">
+		select a.order_no,a.create_time,a.pay_way,
+		a.order_pay_first,a.advertise_order_total,a.mobile,
+		a.position_id,c.position_title,a.material_id,b.material_name,c.position_provider,
+		c.position_city,c.position_country,
+		(case when "1"=a.order_type then "定金订单"
+					when "2"=a.order_type then "支付订单"
+					else "未知订单" end) order_type_show,
+		(case when "0"=a.pay_type then "线上"
+					when "1"=a.pay_type then "线下"
+					else "未知" end) pay_type_show,
+					
+		(case when "0"=a.order_remit then "否"
+					when "1"=a.order_remit then "是"
+					else "未知订单" end) order_remit_show	
+		from tst_advertise_order a
+		
+		left join tst_material b 
+		on a.material_id = b.material_id 
+		
+		left join tst_position c 
+		on a.position_id = c.position_id  
+		
+		where  a.is_delete ='0'
+		<if test= ' order_type != null and order_type != "" '>
+	 		and a.order_type = #{order_type} 
+	 	</if>
+	 	<if test= ' order_state != null and order_state != "" '>
+	 		and a.order_state = #{order_state} 
+	 	</if>	
+		<if test= ' order_no !=null and order_no != "" '>
+	 		and a.order_no like concat('%',#{order_no},'%')
+	 	</if>	
+	 	<if test= ' pay_type !=null and pay_type != "" '>
+	 		and a.pay_type = #{pay_type} 
+	 	</if>
+	 		
+		group by a.create_time desc
+	</select>
+
+	<select id="getGoodsChangerNotes" parameterType="goodsChangerBean" resultType="goodsChangerNoterBean">
+		select a.* from tst_goods_changer_noter as a
+		inner join tst_goods_changer as b 
+		on a.changer_id = b.changer_id
+		where a.is_delete = '0' and b.is_delete = '0'
+		<if test=' changer_no != null and changer_no != "" '>
+			and b.changer_no like concat('%',#{changer_no},'%') 
+		</if>
+		order by a.changer_id desc 
+	</select>
+	
+	<update id="updateGoodsChangerNote" parameterType="goodsChangerNoterBean">
+		update tst_goods_changer_noter set update_time = now()
+		<if test=' charge_state != null and charge_state != "" '>
+			,charge_state = #{charge_state}
+		</if>
+		where changer_noter_id = #{changer_noter_id}
+	</update>
+	
+	<select id="getOrderGoodsDetail" parameterType="orderGoodsBean" resultType="orderGoodsBean">
+		select * from tst_order_goods
+		where order_goods_id=#{order_goods_id}
+		and is_delete='0'
+	</select>
+	
+	
+	
+	<select id="getMemberVouchers" parameterType="memberVoucherBean" resultType="memberVoucherBean">
+		select * from tst_member_voucher 
+		where is_delete = 0 
+		<if test=' member_account != null and member_account != "" '>
+			and member_account like concat('%',#{member_account},'%') 
+		</if>
+		
+		order by create_time desc
+	</select>
+	
+
+	<select id="getShopCarStatistics" parameterType="shopCarBean" resultType="Map">
+		select sum(c.specification_price*goods_num)specification_price from tst_goods_shop_car as a
+		inner join tst_goods as b
+		on a.goods_id=b.goods_id and b.is_delete='0'
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and b.merchants_id=#{merchants_id}
+		</if>
+		inner join tst_goods_relation_specification as c
+		on a.specification_id=c.specification_id and c.is_delete='0'
+		where a.is_delete='0'
+		<if test=' start_time != null and start_time != "" '>
+			and a.create_time>#{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			and #{end_time}>a.create_time
+		</if>
+	</select>
+
+	<select id="getRefundStatistics" parameterType="orderRefundBean" resultType="Map">
+		select count(*) refund_count,sum(case when a.refund_type = '1' then a.refund_price else 0 end)refund_price 
+		from tst_order_refund as a
+		inner join tst_order_merchants as b
+		on a.order_merchants_id=b.order_merchants_id
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and b.merchants_id=#{merchants_id}
+		</if>
+		where a.is_delete='0' and FIND_IN_SET(a.refund_state,'wait_review,accept,refund_ing,refund_fail,end')
+
+		<if test=' start_time != null and start_time != "" '>
+			and a.create_time>#{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			and #{end_time}>a.create_time
+		</if>
+		<if test=' refund_type != null and refund_type != "" '>
+			and a.refund_type=#{refund_type}
+		</if>
+	</select>
+	
+	<select id="getTotalOrderPrice" parameterType="orderMerchantsBean" resultType="Map">
+		select sum(order_actual_price) order_actual_price,count(*) order_count,FORMAT(sum(order_actual_price)/count(*),2) order_average_price
+		,sum(order_actual_price-settlement_price-settlement_wholesale_price) as profit_price,
+		FORMAT(sum(order_actual_price-settlement_price-settlement_wholesale_price)/sum(order_actual_price),2) as rate_price
+		from tst_order_merchants
+		where is_delete='0' and FIND_IN_SET(order_state,'wait_send,wait_receive,wait_assessment,end,close')
+		<if test=' start_time != null and start_time != "" '>
+			and create_time > #{start_time}
+		</if>
+		<if test=' start_time != null and start_time != "" '>
+			and #{end_time}>create_time
+		</if>
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and merchants_id=#{merchants_id}
+		</if>
+	</select>
+
+	<update id="commissionOrder" parameterType="orderMerchantsBean">
+		update tst_order_merchants
+		set is_commission='2',commission_time=now()
+		where FIND_IN_SET(order_merchants_id,#{order_id}) and is_commission='1'
+	</update>
+	
+	<select id="getCommissionPrices" parameterType="orderMerchantsBean" resultType="orderMerchantsBean">
+		select sum(settlement_price) settlement_price,sum(commission_price) as commission_price from tst_order_merchants 
+		where order_state='close' and commission_merchants_id != -1
+		<if test=' is_commission != null and is_commission != "" '>
+			and is_commission=#{is_commission}
+		</if>
+		<if test= ' order_merchants_no !=null and order_merchants_no != "" '>
+	 		and order_merchants_no like concat('%',#{order_merchants_no},'%')
+	 	</if>
+	 	<if test= ' commission_merchants_id !=null and commission_merchants_id != "" '>
+	 		and commission_merchants_id = #{commission_merchants_id}
+	 	</if>
+	 	<if test= ' commission_merchants_name !=null and commission_merchants_name != "" '>
+	 		and commission_merchants_name like concat('%',#{commission_merchants_name},'%')
+	 	</if>
+	 	<if test= ' start_time !=null and start_time != "" '>
+	 		and create_time > #{start_time} 
+	 	</if>
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time}  > create_time
+	 	</if>	
+	 	<if test= ' member_id !=null and member_id != "" '>
+	 		and member_id = #{member_id}
+	 	</if>
+	</select>
+	
+	<select id="getCommissionOrders" parameterType="orderMerchantsBean" resultType="orderMerchantsBean">
+		select * from tst_order_merchants 
+		where order_state='close' and commission_merchants_id != -1
+		<if test=' is_commission != null and is_commission != "" '>
+			and is_commission=#{is_commission}
+		</if>
+		<if test= ' order_merchants_no !=null and order_merchants_no != "" '>
+	 		and order_merchants_no like concat('%',#{order_merchants_no},'%')
+	 	</if>
+	 	<if test= ' commission_merchants_id !=null and commission_merchants_id != "" '>
+	 		and commission_merchants_id = #{commission_merchants_id}
+	 	</if>
+	 	<if test= ' commission_merchants_name !=null and commission_merchants_name != "" '>
+	 		and commission_merchants_name like concat('%',#{commission_merchants_name},'%')
+	 	</if>
+	 	<if test= ' start_time !=null and start_time != "" '>
+	 		and create_time > #{start_time} 
+	 	</if>
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time}  > create_time
+	 	</if>	
+	 	<if test= ' member_id !=null and member_id != "" '>
+	 		and member_id = #{member_id}
+	 	</if>
+	</select>
+
+	<update id="settlementOrders" parameterType="orderMerchantsBean">
+		update tst_order_merchants
+		set is_settlement='1',settlement_time=now()
+		where FIND_IN_SET(order_merchants_id,#{order_id}) and is_settlement='0'
+	</update>
+
+	<insert id="insertMemberCreditBillsV2" parameterType="memberBillBean" useGeneratedKeys="true" keyProperty="bill_id">
+		insert into tst_member_bill
+		(member_account,member_id,bill_price,bill_type,order_merchants_id,
+		order_merchants_no,create_time,update_time)
+		select #{member_account},member_id,order_actual_price,5,order_merchants_id,
+		order_merchants_no,now(),now()
+		 from tst_order_merchants
+		where order_id=#{order_merchants_id} and is_delete='0'
+	</insert>
+	
+	<insert id="insertMemberCreditBillsV3" parameterType="memberBillBean" useGeneratedKeys="true" keyProperty="bill_id">
+		insert into tst_member_credit_bill
+		(member_id,credit_bill_price,credit_bill_type,order_merchants_id,
+		order_merchants_no,create_time,update_time)
+		select member_id,order_actual_price,3,order_merchants_id,
+		order_merchants_no,now(),now()
+		from tst_order_merchants
+		where order_id=#{order_merchants_id} and is_delete='0'
+	</insert>
+	
+	<update id="updateMemberBalance" parameterType="shopMemberBean">
+		update tst_member set update_time = now()
+		,member_balance = member_balance + #{member_balance}
+		where member_id = #{member_id}
+	</update>
+	
+	<update id="updateMemberCreditV2" parameterType="shopMemberBean">
+		update tst_member set update_time = now()
+		,member_credit_balance = member_credit_balance + #{member_credit_balance}
+		where member_id = #{member_id}
+	</update>
+	
+	<select id="getMemberDetail" parameterType="shopMemberBean" resultType="shopMemberBean">
+		select * from tst_member
+		where member_id=#{member_id} and is_delete='0'
+	</select>
+	
+	
+	<select id="getOrderDetail" parameterType="orderBean" resultType="orderBean">
+		select a.*,b.member_nick_name as member_name from tst_order as a
+		left join tst_member as b
+		on b.member_id =a.member_id
+		where a.is_delete='0'
+		and a.order_id=#{order_id}
+	</select>
+	<select id="getOrders" parameterType="orderBean" resultType="orderBean">
+		select a.*,b.member_nick_name as member_name from tst_order as a
+		left  join  tst_member as b 
+		on b.member_id = a.member_id
+		where a.is_delete='0'
+		<if test= ' merchants_id != null and merchants_id != "" '>
+	 		and a.merchants_id = #{merchants_id}
+	 	</if>	
+	 	<if test= ' member_id != null and member_id != "" '>
+	 		and a.member_id = #{member_id}
+	 	</if>		
+	 	<if test= ' order_state != null and order_state != "" '>
+	 		and a.order_state = #{order_state}
+	 	</if>	
+		<if test= ' order_no !=null and order_no != "" '>
+	 		and a.order_no like concat('%',#{order_no},'%')
+	 	</if>
+	 	<if test= ' start_time != null and start_time != "" '>
+	 		and a.create_time>#{start_time}
+	 	</if>	
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time} > a.create_time
+	 	</if>
+	 	
+		
+	 	order by a.create_time desc
+	</select>
+	<select id="getOrdersTotalPrice" parameterType="orderBean" resultType="orderBean">
+		select sum(order_price) as coupon_price from tst_order as a
+		where a.is_delete='0'
+		<if test= ' merchants_id != null and merchants_id != "" '>
+	 		and a.merchants_id = #{merchants_id}
+	 	</if>	
+	 	<if test= ' member_id != null and member_id != "" '>
+	 		and a.member_id = #{member_id}
+	 	</if>		
+	 	<if test= ' order_state != null and order_state != "" '>
+	 		and a.order_state = #{order_state}
+	 	</if>	
+		<if test= ' order_no !=null and order_no != "" '>
+	 		and a.order_no like concat('%',#{order_no},'%')
+	 	</if>
+	 	<if test= ' start_time != null and start_time != "" '>
+	 		and a.create_time>#{start_time}
+	 	</if>	
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time} > a.create_time
+	 	</if>
+	 	
+	</select>
+	<update id="updateOrder" parameterType="orderBean">
+		update tst_order
+		set update_time=now()
+		
+		<if test=' refund_fail_reason != null and refund_fail_reason != "" '>
+			,refund_fail_reason=#{refund_fail_reason}
+		</if>
+		<if test=' order_state != null and order_state != "" '>
+			,order_state=#{order_state}
+		</if>
+		<if test=' order_remark != null and order_remark != "" '>
+			,order_remark=#{order_remark}
+		</if>
+		where order_id=#{order_id}
+	</update>
+	<update id="deleteOrder" parameterType="orderBean">
+		update tst_order
+		set update_time=now(),is_delete= 0
+		where order_id=#{order_id}
+	</update>
+	
+	
+	<select id="exportOrders" parameterType="orderMerchantsBean" resultType="Map">
+		
+		 
+		select a.*,b.member_nick_name as member_name 
+		,(case when "cancel"=a.order_state then "已取消"
+					when "wait_pay"=a.order_state then "待支付"
+					when "wait_refund"=a.order_state then "退款中"
+					when "wait_use"=a.order_state then "未使用"
+					when "fail_refund"=a.order_state then "退款失败"
+					when "have_refunded"=a.order_state then "退款成功"
+					when "have_used"=a.order_state then "已使用"
+					when "have_commented"=a.order_state then "已评价"
+					else "未知状态" end) order_state_show
+		from tst_order as a
+		left  join  tst_member as b 
+		on b.member_id = a.member_id
+		
+		where  a.is_delete = '0'
+		<if test= ' merchants_id != null and merchants_id != "" '>
+	 		and a.merchants_id = #{merchants_id}
+	 	</if>	
+	 	<if test= ' member_id != null and member_id != "" '>
+	 		and a.member_id = #{member_id}
+	 	</if>		
+	 	<if test= ' order_state != null and order_state != "" '>
+	 		and a.order_state = #{order_state}
+	 	</if>	
+		<if test= ' order_no !=null and order_no != "" '>
+	 		and a.order_no like concat('%',#{order_no},'%')
+	 	</if>
+	 	<if test= ' start_time != null and start_time != "" '>
+	 		and a.create_time>#{start_time}
+	 	</if>	
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time} > a.create_time
+	 	</if>
+	 	
+		<if test= ' order_state != null and order_state != "" '>
+	 		and FIND_IN_SET(a.refund_state, #{order_state})
+	 	</if>
+		order by a.create_time desc
+	</select>
+	
+	<update id="updateReconciliationState" parameterType="OrderMerchantsBean">
+		update tst_order_merchants 
+		set update_time = now()
+		,reconciliation_state = #{reconciliation_state}
+		where order_merchants_id = #{order_merchants_id}
+	</update>
+	
+	<select id="getMerchantsTotalSaleDetail" parameterType="OrderMerchantsBean" resultType="OrderMerchantsBean">
+		select a.*,sum(b.goods_num) as goods_num
+		from tst_order_merchants a
+		left join tst_order_goods b on a.order_merchants_id = b.order_merchants_id
+		where merchants_id = #{merchants_id} 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(a.create_time,19) > #{goods_min_time}
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(a.create_time,19)
+		</if>
+		group by a.order_merchants_id 
+		order by a.create_time
+	</select>
+	
+	<select id="getTerraceTotalSales" parameterType="orderGoodsBean" resultType="orderGoodsBean">
+		select ifnull(sum(goods_num),0) as goods_num from tst_order_goods
+		where 1=1 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(create_time,19) > #{goods_min_time}
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(create_time,19)
+		</if>
+	</select>
+	
+	<select id="getTerraceTotalConsume" parameterType="OrderMerchantsBean" resultType="OrderMerchantsBean">
+		select ifnull(sum(order_actual_price),0) as order_actual_price 
+		from tst_order_merchants 
+		where 1=1 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(create_time,19) > #{goods_min_time}
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(create_time,19)
+		</if>
+	</select>
+	
+	<select id="getMerchantsTotalSales" parameterType="orderGoodsBean" resultType="orderGoodsBean">
+		select ifnull(sum(goods_num),0)	as goods_num from tst_order_goods a
+		left join tst_order_merchants b on a.order_merchants_id = b.order_merchants_id
+		where 1=1 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(a.create_time,19) > #{goods_min_time}
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(a.create_time,19)
+		</if>
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and b.merchants_id = #{merchants_id} 
+		</if>
+		group by b.merchants_id
+		order by merchants_id desc
+	</select>
+	
+	<select id="getMerchantsTotalConsumes" parameterType="OrderMerchantsBean" resultType="OrderMerchantsBean">
+		select merchants_id,sum(order_actual_price) as order_actual_price 
+		from tst_order_merchants 
+		where 1=1 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(create_time,19) > #{goods_min_time} 
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(create_time,19) 
+		</if>
+		group by merchants_id
+		order by merchants_id desc
+	</select>
+	
+	<select id="getMerchantsTotalConsume" parameterType="OrderMerchantsBean" resultType="OrderMerchantsBean">
+		select merchants_id,sum(order_actual_price) as order_actual_price 
+		from tst_order_merchants 
+		where merchants_id = #{merchants_id} 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(create_time,19) > #{goods_min_time} 
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(create_time,19) 
+		</if>
+	</select>
+	
+	<select id="getGoodsConsumeCounts" parameterType="orderGoodsBean" resultType="orderGoodsBean">
+		select goods_id,goods_name,sum(goods_num) as goods_num from tst_order_goods 
+		where is_delete = 0 
+		<if test=' goods_min_time != null and goods_min_time != "" '>
+			and left(create_time,19) > #{goods_min_time}
+		</if>
+		<if test=' goods_max_time != null and goods_max_time != "" '>
+			and #{goods_max_time} > left(create_time,19)
+		</if>
+		group by goods_id
+		order by goods_num desc
+	</select>
+	
+	<select id="getMemberConsumeOrderBys" parameterType="memberBillBean" resultType="memberBillBean">
+		select member_id,member_account,ifnull(sum(bill_price),0) as bill_price 
+		from tst_member_bill 
+		where is_delete = 0 
+		<if test=' member_account != null and member_account != "" '>
+			and member_account = #{member_account} 
+		</if>	
+		group by member_id 
+		order by bill_price desc
+	</select>
+	
+	<select id="getGoodsAllSales" parameterType="goodsBean" resultType="goodsBean">
+		select sum(goods_actual_sales) as goods_actual_sales from tst_goods 
+		where is_delete = 0 
+	</select>
+	
+	<select id="getOrderByGoodsSales" parameterType="goodsBean" resultType="Map">
+		select a.goods_name,a.merchants_name,c.brand_name,
+		b.specification_names,b.specification_price,
+		b.specification_wholesale_price,b.specification_sales,
+		b.specification_stock
+		from tst_goods as a 
+		inner join tst_goods_relation_specification as b
+		on a.goods_id=b.goods_id 
+		left join tst_brand as c
+		on a.brand_id=c.brand_id 
+		<!-- and b.is_delete='0' -->
+		where 1=1
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id = #{merchants_id}
+		</if>
+		<if test=' merchants_name != null and merchants_name != "" '>
+			and a.merchants_name like concat('%',#{merchants_name},'%')
+		</if>
+		<if test=' goods_name != null and goods_name != "" '>
+			and a.goods_name like concat('%',#{goods_name},'%')
+		</if>
+		order by specification_sales desc
+	</select>
+	
+	<select id="getMemberCredits" parameterType="creditGradesBean" resultType="creditGradesBean">
+		select a.credit_id,a.credit_grades,count(b.credit_grades) as member_count 
+		from tst_member_credit_grades a
+		left join tst_member b on a.credit_grades = b.credit_grades and b.is_delete = 0 
+		where a.is_delete = 0 
+		group by a.credit_grades
+	</select>
+	
+	<select id="getOrderSales" parameterType="orderSaleBean" resultType="orderSaleBean">
+		select * from tst_order_sale
+		where is_delete = 0 
+		order by order_state 
+	</select>
+	
+	<select id="getOrderRechargeActivitys" parameterType="orderRechargeActivityBean" resultType="orderRechargeActivityBean">
+		select * from tst_order_recharge_activity 
+		where is_delete = 0 
+		order by create_time desc
+	</select>
+	
+	<select id="getOrderRechargeActivityDetail" parameterType="orderRechargeActivityBean" resultType="orderRechargeActivityBean">
+		select * from tst_order_recharge_activity 
+		where is_delete = 0 
+		and activity_id = #{activity_id}
+	</select>
+	
+	<insert id="insertOrderRechargeActivity" parameterType="orderRechargeActivityBean" keyProperty="activity_id">
+		insert into tst_order_recharge_activity(activity_need_price,activity_give_price
+		,create_time,update_time)
+		values(
+			#{activity_need_price},#{activity_give_price},now(),now()
+		)
+	</insert>
+	
+	<update id="updateOrderRechargeActivity" parameterType="orderRechargeActivityBean">
+		update tst_order_recharge_activity
+		set update_time = now()
+		<if test=' activity_need_price != null and activity_need_price != "" '>
+			,activity_need_price=#{activity_need_price}
+		</if>
+		<if test=' activity_give_price != null and activity_give_price != "" '>
+			,activity_give_price=#{activity_give_price}
+		</if>
+		where activity_id = #{activity_id}
+	</update>
+	
+	<update id="deleteOrderRechargeActivity" parameterType="orderRechargeActivityBean">
+		update tst_order_recharge_activity
+		set update_time = now()
+		,is_delete = 1
+		where activity_id = #{activity_id}
+	</update>
+	
+	
+	
+	<insert id="insertOrderCredit" parameterType="orderCreditBean">
+		insert into tst_order_credit_balance
+		(order_no,member_id,credit_state,member_credit_balance,create_time,update_time)
+		values
+		(#{order_no},#{member_id},1,#{member_credit_balance},now(),now())
+	</insert>
+	
+	<update id="updateMemberCredit" parameterType="orderCreditBean">
+		update tst_member set update_time = now() 
+		,credit_grades = 
+		(select credit_grades from tst_member_credit_grades 
+			where credit_id = #{credit_id} and is_delete='0') 
+		,member_credit_balance = 
+		(select credit_balance from tst_member_credit_grades 
+			where credit_id = #{credit_id} and is_delete='0') 
+		,credit_balance = 
+		(select credit_balance from tst_member_credit_grades 
+			where credit_id = #{credit_id} and is_delete='0') 
+		where member_id = #{member_id}
+	</update>
+	
+	<select id="getOrderCreditDetail" parameterType="orderCreditBean" resultType="orderCreditBean">
+		select * from tst_order_credit_balance 
+		where is_delete = 0 
+		<if test=' member_id != null and member_id != "" '>
+			and member_id = #{member_id}
+		</if>
+		<if test=' order_no != null and order_no != "" '>
+			and order_no = #{order_no}
+		</if>
+		
+	</select>
+	
+	<insert id="insertMemberCreditBills" parameterType="orderCreditBean" useGeneratedKeys="true" keyProperty="bill_id">
+		INSERT INTO tst_member_credit_bill
+		(member_id,credit_bill_price,credit_bill_type,order_merchants_id,
+		order_merchants_no,create_time,update_time)
+		SELECT member_id,member_credit_balance,1,order_id,
+		order_no,NOW(),NOW()
+		 FROM tst_order_credit_balance
+		WHERE order_id=#{order_id} AND is_delete='0'
+	</insert>
+	
+	<insert id="insertMemberBill" parameterType="memberBillBean">
+		insert into tst_member_bill
+		(member_account,member_id,bill_price,bill_type,order_merchants_id,
+		order_merchants_no,refund_id,refund_no,
+		create_time,update_time)
+		values
+		(#{member_account},#{member_id},#{bill_price},#{bill_type},#{order_merchants_id},
+		#{order_merchants_no},#{refund_id},#{refund_no},
+		now(),now())
+	</insert>
+
+	<update id="refundOrder" parameterType="orderMerchantsBean">
+	 	 update tst_order_merchants
+		set update_time=now()
+			,order_state='refund'
+		where order_merchants_id = #{order_merchants_id}
+	 </update>
+	 
+	<select id="getEndRefundOrder" parameterType="orderRefundBean" resultType="int">
+			select count(*) from(
+			select a.goods_num,sum(case when FIND_IN_SET(b.refund_state,'refund_ing,end')  then b.refund_count else 0 end) refund_count
+			from tst_order_goods as a
+			left join tst_order_refund as b
+			on a.order_goods_id=b.order_goods_id and b.is_delete='0'
+			where a.order_merchants_id=#{order_merchants_id}
+			group by a.order_goods_id
+		) as a
+		where goods_num!=refund_count
+	</select>
+	<update id="refuseOrderGoods" parameterType="orderGoodsBean">
+		update tst_order_goods
+		set update_time=now(),
+		refund_count=refund_count-#{refund_count},
+		refund_end_price=refund_end_price-#{refund_end_price}
+		where order_goods_id=#{order_goods_id}
+	</update>
+
+	<update id="updateOrderRefund" parameterType="orderRefundBean">
+		update tst_order_refund
+		set update_time=now()
+		<if test=' refund_state != null and refund_state != "" '>
+			,refund_state=#{refund_state}
+		</if>
+		where refund_id=#{refund_id}
+	</update>
+
+	<select id="getOrderLogisticsDetail" parameterType="orderLogisticsBean" resultType="orderLogisticsBean">
+		select * from tst_order_logistics
+		where order_merchants_id=#{order_merchants_id} and is_delete='0'
+	</select>
+	
+	<insert id="insertOrderLogistics" parameterType="orderLogisticsBean">
+		insert into tst_order_logistics
+		(order_id,order_merchants_id,logistics_no,logistics_name,
+		logistics_pinyin,send_company,send_name,send_mobile,
+		send_privince,send_city,send_country,send_address,
+		send_zip_code,create_time,update_time)
+		values
+		(#{order_id},#{order_merchants_id},#{logistics_no},#{logistics_name},
+		#{logistics_pinyin},#{send_company},#{send_name},#{send_mobile},
+		#{send_privince},#{send_city},#{send_country},#{send_address},
+		#{send_zip_code},now(),now())
+	</insert>
+	
+	<update id="updateOrderLogistics" parameterType="orderLogisticsBean">
+		update tst_order_logistics
+		set update_time=now()
+		<if test=' logistics_no != null and logistics_no != "" '>
+			,logistics_no=#{logistics_no}
+		</if>
+		<if test=' logistics_name != null and logistics_name != "" '>
+			,logistics_name=#{logistics_name}
+		</if>
+		<if test=' logistics_pinyin != null and logistics_pinyin != "" '>
+			,logistics_pinyin=#{logistics_pinyin}
+		</if>
+		<if test=' send_company != null and send_company != "" '>
+			,send_company=#{send_company}
+		</if>
+		<if test=' send_name != null and send_name != "" '>
+			,send_name=#{send_name}
+		</if>
+		<if test=' send_mobile != null and send_mobile != "" '>
+			,send_mobile=#{send_mobile}
+		</if>
+		<if test=' send_privince != null and send_privince != "" '>
+			,send_privince=#{send_privince}
+		</if>
+		<if test=' send_city != null and send_city != "" '>
+			,send_city=#{send_city}
+		</if>
+		<if test=' send_country != null and send_country != "" '>
+			,send_country=#{send_country}
+		</if>
+		<if test=' send_address != null and send_address != "" '>
+			,send_address=#{send_address}
+		</if>
+		<if test=' send_zip_code != null and send_zip_code != "" '>
+			,send_zip_code=#{send_zip_code}
+		</if>
+		
+		where logistics_order_id=#{logistics_order_id}
+	</update>
+
+	<select id="getOrderCounts" parameterType="orderBean" resultType="Map">
+	 	select (case 
+		when order_state = 'cancel' then "已取消" 
+		when order_state = 'wait_pay' then "代付款"
+		when order_state = 'wait_use' then "未使用"
+		when order_state = 'wait_refund' then "退款中"
+		when order_state = 'fail_refund' then "退款失败"
+		when order_state = 'have_refunded' then "退款成功"
+		when order_state = 'have_used' then "已使用"
+		when order_state = 'have_commented' then "已评价"
+		when order_state = 'end' then "已完成"
+		else "未知" end) name,
+		count(*) value from tst_order_merchants
+		where is_delete = 0
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and merchants_id=#{merchants_id}
+		</if>
+		group by order_state
+	 </select>
+	 
+	 
+	 <select id="getOrderTotalAmounts" parameterType="Map" resultType="Map">
+		select DATE_FORMAT(a.time,'%m-%d')as time,IFNULL(b.price,"0")price from (
+		<foreach collection="timeBeans" item="item" index="index" separator="union" >
+				select #{item} as time
+		</foreach>
+		) as a
+		left join 
+		(
+		select sum(order_price) price,DATE_FORMAT(create_time,'%Y-%m-%d')as time
+		from tst_order
+		where create_time >= #{start_time} and #{end_time}>=create_time
+		and order_state != 'cancel' and order_state != 'wait_pay' 
+		
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and merchants_id = #{merchants_id}
+		</if>
+		GROUP BY DATE_FORMAT(create_time,'%Y-%m-%d')
+		) as b
+		on a.time=b.time
+	</select>
+	 
+	 <select id="getOrderPrices" parameterType="orderBean" resultType="Map">
+	 	select (case 
+		when order_state = 'cancel' then "已取消" 
+		when order_state = 'wait_pay' then "代付款"
+		when order_state = 'wait_use' then "未使用"
+		when order_state = 'wait_refund' then "退款中"
+		when order_state = 'fail_refund' then "退款失败"
+		when order_state = 'have_refunded' then "退款成功"
+		when order_state = 'have_used' then "已使用"
+		when order_state = 'have_commented' then "已评价"
+		when order_state = 'end' then "已完成"
+		else "未知" end) name,
+		sum(order_price) value from tst_order as a
+		where 1 = 1
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id=#{merchants_id}
+		</if>
+		group by a.order_state
+	 </select>
+	 
+	
+	<select id="getOrderAssessmentBeanDetail" parameterType="orderAssessmentBean" resultType="orderAssessmentBean">
+	 	select * from tst_order_assessment 
+	 	where is_delete = 0 
+	 	and assessment_id = #{assessment_id}
+	 </select>
+	 
+	 <update id="deleteOrderAssessment" parameterType="orderAssessmentBean">
+	 	update tst_order_assessment 
+	 	set update_time = now()
+	 	,is_delete = 1
+	 	where assessment_id = #{assessment_id}
+	 </update>
+	
+	<select id="getOrderAddress" parameterType="orderAddressBean" resultType="orderAddressBean">
+	 	select * from tst_order_address 
+	 	where is_delete = '0'
+	 	and order_id = #{order_id}
+	 </select>
+	 <select id="getOrderAddressByChanger" parameterType="orderAddressBean" resultType="orderAddressBean">
+	 	select * from tst_order_address 
+	 	where is_delete = '0'
+	 	and changer_id = #{changer_id}
+	 </select>
+	 
+	 
+	 <select id="getOrderGoods" parameterType="orderGoodsBean" resultType="orderGoodsBean">
+	 	select * from tst_order_goods 
+	 	where is_delete = '0'
+	 	and order_merchants_id = #{order_merchants_id}
+	 </select>
+	 
+	 <select id="getOrderActivity" parameterType="orderActivityBean" resultType="orderActivityBean">
+	 	select * from tst_order_activity
+		where is_delete = 0 
+	 	and order_merchants_id = #{order_merchants_id}
+	 </select>
+	 
+	 
+	 <select id="getOrderMerchantsDetail" parameterType="orderMerchantsBean" resultType="orderMerchantsBean">
+	 	select * from tst_order_merchants
+	 	where order_merchants_id = #{order_merchants_id}
+	 </select>
+	 
+	 <update id="updateOrderMerchants" parameterType="orderMerchantsBean">
+	 	 update tst_order_merchants
+		set update_time=now()
+		<if test=' order_state != null and order_state != "" '>
+			,order_state=#{order_state}
+		</if>
+		where order_merchants_id = #{order_merchants_id}
+	 </update>
+	 
+	 
+	 <update id="sendOrder" parameterType="orderMerchantsBean">
+	 	update tst_order_merchants
+		set send_time=now(),
+		order_state='wait_receive',update_time=now()
+		where order_merchants_id=#{order_merchants_id}
+	 </update>
+	 
+	 
+	
+	
+	<select id="getOrderRefundBeans" parameterType="orderRefundBean" resultType="orderRefundBean">
+	 	select * from tst_order_refund 
+		where is_delete = 0 
+		<if test= ' refund_state != null and refund_state !="" '>
+			and FIND_IN_SET(refund_state, #{refund_state})
+		</if>
+	 </select>
+	 
+	 <select id="getOrderRefundDetail" parameterType="orderRefundBean" resultType="orderRefundBean">
+	 	select * from tst_order_refund 
+		where is_delete = 0 
+		and refund_id = #{refund_id} 
+	 </select>
+	 
+	 <select id="getOrderRefundGoodsBeanDetail" parameterType="orderGoodsBean" resultType="orderGoodsBean">
+	 	select * from tst_order_goods 
+	 	where is_delete = '0'
+	 	and order_goods_id = #{order_goods_id}
+	 </select>
+	
+	<select id="getOrderRefundReasonBeans" parameterType="orderRefundReasonBean" resultType="orderRefundReasonBean">
+	 	select * from tst_order_refund_reason 
+		where is_delete = 0
+		order by sort desc
+	 </select>
+	 
+	 <select id="getOrderRefundReasonBeanDetail" parameterType="orderRefundReasonBean" resultType="orderRefundReasonBean">
+	 	select * from tst_order_refund_reason 
+		where is_delete = 0 
+		and refund_reason_id = #{refund_reason_id}
+	 </select>
+	 
+	 <select id="moveOrderRefundReasonBean" parameterType="orderRefundReasonBean" resultType="orderRefundReasonBean">
+	 	select * from tst_order_refund_reason 
+		where is_delete = 0
+		<if test=' sort_type == "desc" '>
+			and sort>#{sort}
+		</if>
+		<if test=' sort_type == "asc" '>
+			and #{sort}>sort
+		</if>
+		<if test=' sort_type == "asc" '>
+			order by sort desc
+		</if>
+		<if test=' sort_type == "desc" '>
+			order by sort asc
+		</if>
+		limit 0,1
+	 </select>
+	 
+	 <insert id="insertOrderRefundReasonBean" parameterType="orderRefundReasonBean" useGeneratedKeys="true" keyProperty="refund_reason_id">
+	 	insert tst_order_refund_reason(reason_name,sort,create_time,update_time)
+	 	value
+	 	(#{reason_name},ifnull((select a.sort+1 from (
+				select sort  
+				from tst_order_refund_reason where is_delete='0'
+				order by sort desc limit 0,1) a),"1"),now(),now())
+	 </insert>
+	 
+	 <update id="updateOrderRefundReasonBean" parameterType="orderRefundReasonBean">
+	 	update tst_order_refund_reason 
+	 	set update_time = now()
+	 	<if test=' reason_name != null and reason_name != "" '>
+	 		,reason_name = #{reason_name}
+	 	</if>
+	 	<if test=' sort != null and sort != "" '>
+	 		,sort = #{sort}
+	 	</if>
+	 	where refund_reason_id = #{refund_reason_id}
+	 </update>
+	 
+	 <update id="deleteOrderRefundReasonBean" parameterType="orderRefundReasonBean">
+	 	update tst_order_refund_reason 
+	 	set update_time = now()
+	 	,is_delete = 1
+	 	where refund_reason_id = #{refund_reason_id}
+	 </update>
+	 
+	 <select id="getOrderLogisticsCompanys" parameterType="orderLogisticsCompanyBean" resultType="orderLogisticsCompanyBean">
+	 	select * from tst_order_logistics_company 
+		where is_delete = 0
+	 </select>
+	 
+	 <select id="getOrderLogisticsCompanyDetail" parameterType="orderLogisticsCompanyBean" resultType="orderLogisticsCompanyBean">
+	 	select * from tst_order_logistics_company 
+		where is_delete = 0 
+		and logistics_id = #{logistics_id}
+	 </select>
+	 
+	 <insert id="insertOrderLogisticsCompany" parameterType="orderLogisticsCompanyBean" useGeneratedKeys="true" keyProperty="logistics_id">
+	 	insert into tst_order_logistics_company(logistics_name,logistics_pinyin,create_time,update_time)
+
+	 	value
+	 	(#{logistics_name},#{logistics_pinyin},now(),now())
+	 </insert>
+	 
+	<update id="updateOrderLogisticsCompany" parameterType="orderLogisticsCompanyBean">
+		update tst_order_logistics_company 
+		set update_time = now()
+		<if test=' logistics_name != null and logistics_name != "" '>
+			,logistics_name = #{logistics_name}
+		</if>
+		<if test=' logistics_pinyin != null and logistics_pinyin != "" '>
+			,logistics_pinyin = #{logistics_pinyin}
+		</if>
+		where logistics_id = #{logistics_id}
+	</update>
+	
+	<update id="deleteOrderLogisticsCompany" parameterType="orderLogisticsCompanyBean">
+		update tst_order_logistics_company 
+		set update_time = now()
+		,is_delete = 1
+		where logistics_id = #{logistics_id}
+	</update>
+	
+	<select id="getOrderMerchants" parameterType="orderMerchantsBean" resultType="orderMerchantsBean">
+		select * from tst_order_merchants 
+		where 1 = 1
+		<if test= ' order_state !=null and order_state != "" '>
+	 		and order_state = #{order_state} 
+	 	</if>
+	 	<if test= ' is_settlement !=null and is_settlement != "" '>
+	 		and is_settlement = #{is_settlement} 
+	 	</if>
+	 	<if test= ' order_merchants_no !=null and order_merchants_no != "" '>
+	 		and order_merchants_no like concat('%',#{order_merchants_no},'%')
+	 	</if>
+	 	<if test= ' merchants_id !=null and merchants_id != "" '>
+	 		and merchants_id = #{merchants_id}
+	 	</if>
+	 	<if test= ' merchants_name !=null and merchants_name != "" '>
+	 		and merchants_name like concat('%',#{merchants_name},'%')
+	 	</if>	
+	 	<if test= ' start_time !=null and start_time != "" '>
+	 		and create_time > #{start_time} 
+	 	</if>
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time}  > create_time
+	 	</if>	
+	 	<if test= ' member_id !=null and member_id != "" '>
+	 		and member_id = #{member_id}
+	 	</if>
+	 	order by create_time desc
+
+	</select>
+	
+	<select id="getSettlementPrices" parameterType="orderMerchantsBean" resultType="orderMerchantsBean">
+		select sum(order_actual_price) order_actual_price,sum(refund_price) refund_price,sum(settlement_price) settlement_price
+		,sum(settlement_wholesale_price) settlement_wholesale_price
+		,sum(freight_price) freight_price
+		 from tst_order_merchants 
+		where 1 = 1
+		<if test= ' order_state !=null and order_state != "" '>
+	 		and order_state = #{order_state} 
+	 	</if>
+	 	<if test= ' is_settlement !=null and is_settlement != "" '>
+	 		and is_settlement = #{is_settlement} 
+	 	</if>
+	 	<if test= ' order_merchants_no !=null and order_merchants_no != "" '>
+	 		and order_merchants_no like concat('%',#{order_merchants_no},'%')
+	 	</if>
+	 	<if test= ' merchants_id !=null and merchants_id != "" '>
+	 		and merchants_id = #{merchants_id}
+	 	</if>
+	 	<if test= ' merchants_name !=null and merchants_name != "" '>
+	 		and merchants_name like concat('%',#{merchants_name},'%')
+	 	</if>	
+	 	<if test= ' start_time !=null and start_time != "" '>
+	 		and create_time > #{start_time} 
+	 	</if>
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time}  > create_time
+	 	</if>	
+	 	<if test= ' member_id !=null and member_id != "" '>
+	 		and member_id = #{member_id}
+	 	</if>
+
+	</select>
+	
+	<select id="getOrderRefunds" parameterType="orderRefundBean" resultType="orderRefundBean">
+	 	select a.* from tst_order_refund as a
+	 	inner join tst_order_merchants as b
+	 	on a.order_merchants_id=b.order_merchants_id and b.is_delete='0'
+		where a.is_delete = 0 
+		<if test= ' start_time != null and start_time != "" '>
+	 		and a.create_time>#{start_time}
+	 	</if>	
+	 	<if test= ' end_time !=null and end_time != "" '>
+	 		and #{end_time} > a.create_time
+	 	</if>
+	 	
+		<if test= ' refund_state != null and refund_state != "" '>
+	 		and FIND_IN_SET(a.refund_state, #{refund_state})
+	 	</if>	
+	 	<if test= ' merchants_id !=null and merchants_id != "" '>
+	 		and b.merchants_id = #{merchants_id}
+	 	</if>
+	 	<if test= ' order_merchants_no != null and order_merchants_no != "" '>
+	 		and a.order_merchants_no like concat('%',#{order_merchants_no},'%') 
+	 	</if>	
+	 	<if test= ' refund_no != null and refund_no != "" '>
+	 		and a.refund_no like concat('%',#{refund_no},'%') 
+	 	</if>	
+	 	order by a.create_time desc
+	</select>
+	
+	<select id="getOrderAssessments" parameterType="orderAssessmentBean" resultType="orderAssessmentBean">
+	 	select a.*,b.merchants_name,c.goods_name from tst_order_assessment a 
+	 	left join tst_order_merchants b 
+	 	on a.order_merchants_id = b.order_merchants_id 
+	 	and b.is_delete = 0
+	 	left join tst_goods as c
+	 	on a.relation_id=c.goods_id
+		where a.is_delete = 0 
+		<if test= ' merchants_id !=null and merchants_id != "" '>
+	 		and b.merchants_id = #{merchants_id}
+	 	</if>
+	 	<if test=' assessment_type != null and assessment_type != "" '>
+	 		and a.assessment_type=#{assessment_type}
+	 	</if>
+	 	order by create_time desc
+	</select>
+	
+</mapper>

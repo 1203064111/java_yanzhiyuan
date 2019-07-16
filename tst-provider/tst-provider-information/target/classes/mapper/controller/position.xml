@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tst.project.dao.controller.PositionDaoC">
+	
+	<insert id="insertPayDetail" parameterType="payDetailBean">
+		insert into 
+		tst_pay_detail(member_id,advertise_order_id,pay_detail_type,pay_detail_title,price,pay_detail_no,
+		pay_way,advertise_order_no,create_time,update_time)
+		values(
+		#{member_id},#{advertise_order_id},#{pay_detail_type},#{pay_detail_title},#{price},#{pay_detail_no},#{pay_way},
+		#{advertise_order_no},now(),now()
+		)
+	</insert>
+	<update id="updatePositionPersonRemit" parameterType="positionPersonsBean">
+		update tst_position_persons 
+		set update_time = now()
+		<if test=' order_remit != null and order_remit != "" '>
+			 ,order_remit=#{order_remit}
+		</if>
+		where position_persons_id = #{position_persons_id}
+	</update>
+	
+	<select id="getRequirePositionIsNotClose" parameterType="positionPersonsBean" resultType="positionPersonsBean">
+		select a.* from tst_position_persons as a  
+		where a.is_delete = '0' 
+		and a.state = '2' and a.order_remit = '0'
+		and a.position_id = #{position_id}
+	</select>
+	<select id="getRequirePositions" parameterType="positionPersonsBean" resultType="Map">
+		select a.*,c.member_mobile as alipay_account,d.bank_card_number as bank_account,
+		 b.order_remit,b.position_persons_id from tst_require_position as a 
+		inner join tst_position_persons as b 
+		on b.require_position_id = a.require_position_id 
+		left join tst_member_bank_card as c
+		on c.member_id = a.member_id and c.role_type = 'member'
+		left join tst_member_bank_card as d
+		on d.member_id = d.member_id and d.role_type = 'member'
+		where b.is_delete = '0' 
+		and b.state = '2'
+		and b.position_id = #{position_id}
+	</select>
+	<select id="getPayDetails" parameterType="payDetailBean" resultType="payDetailBean">
+		select * from tst_pay_detail where is_delete = '0'
+		and advertise_order_id = #{advertise_order_id}
+	</select>
+	<select id="getMaterials" parameterType="materialBean" resultType="materialBean">
+		select * from tst_material
+		where is_delete='0'
+		
+		<if test=' material_state != null and material_state != "" '>
+			 and material_state=#{material_state}
+		</if>
+		<if test=' material_name != null and material_name != "" '>
+			 and  material_name like concat('%',#{material_name},'%')
+		</if>
+		<if test=' material_type != null and material_type != "" '>
+			 and material_type=#{material_type}
+		</if>
+		
+	</select>
+	<select id="getMaterial" parameterType="materialBean" resultType="materialBean">
+		select * from tst_material
+		where is_delete='0' 
+		and material_id = #{material_id}
+	</select>
+	<update id="updateMaterial" parameterType="materialBean">
+		update tst_material
+		set update_time=now()
+		<if test=' material_state != null and material_state != "" '>
+			 ,material_state=#{material_state}
+		</if>
+		where material_id=#{material_id}
+	</update>
+	<select id="getPositionClasss" parameterType="positionClassBean" resultType="positionClassBean">
+		select * from tst_position_class
+		where is_delete='0'
+		<if test=' position_class_name != null and position_class_name != "" '>
+			 and position_class_name like concat('%',#{position_class_name},'%')
+		</if>
+	</select>
+	<select id="getPositionClass" parameterType="positionClassBean" resultType="positionClassBean">
+		select * from tst_position_class
+		where is_delete='0' 
+		and position_class_id = #{position_class_id}
+	</select>
+	<update id="updatePositionClass" parameterType="positionClassBean">
+		update tst_position_class
+		set update_time=now()
+		
+		<if test=' sort != null and sort != "" '>
+			 ,sort=#{sort}
+		</if>
+		<if test=' position_class_name != null and position_class_name != "" '>
+			 ,position_class_name=#{position_class_name}
+		</if>
+		
+		where position_class_id=#{position_class_id}
+	</update>
+	<insert id="insertPositionClass" parameterType="positionClassBean">
+		
+		insert into 
+		tst_position_class(sort,position_class_name,update_time,create_time)
+		values(#{sort},#{position_class_name},now(),now())
+	</insert>
+	<update id="deletePositionClass" parameterType="positionClassBean">
+		update tst_position_class set update_time = now()
+		,is_delete = 1
+		where position_class_id = #{position_class_id}
+	</update>
+
+	<select id="getSalarys" parameterType="salaryBean" resultType="salaryBean">
+		select * from tst_salary
+		where is_delete='0'
+		
+		<if test=' salary_range != null and salary_range != "" '>
+			 and salary_range like  concat('%',#{salary_range},'%') 
+		</if>
+		
+	</select>
+	<select id="getSalary" parameterType="salaryBean" resultType="salaryBean">
+		select * from tst_salary
+		where is_delete='0' 
+		and salary_id = #{salary_id}
+	</select>
+	<update id="updateSalary" parameterType="salaryBean">
+		update tst_salary
+		set update_time=now()
+		
+		<if test=' sort != null and sort != "" '>
+			 ,sort=#{sort}
+		</if>
+		<if test=' salary_range != null and salary_range != "" '>
+			 ,salary_range=#{salary_range} 
+		</if>
+		
+		where salary_id=#{salary_id}
+	</update>
+	<insert id="insertSalary" parameterType="salaryBean">
+		
+		insert into 
+		tst_salary(update_time,create_time,sort,salary_range)
+		values(now(),now(),#{sort},#{salary_range})
+	</insert>
+	<update id="deleteSalary" parameterType="salaryBean">
+		update tst_salary set update_time = now()
+		,is_delete = 1
+		where salary_id = #{salary_id}
+	</update>
+
+	<update id="updateResumeSetting" parameterType="resumeSettingBean">
+		update tst_resume_setting
+		set update_time=now(),percent_value=#{percent_value}
+		where resume_setting_id=#{resume_setting_id}
+	</update>
+	
+	<select id="getResumeSettings" parameterType="resumeSettingBean" resultType="resumeSettingBean">
+		select * from tst_resume_setting 
+		where is_delete='0'
+	</select>
+
+	<select id="getPositions" parameterType="positionBean" resultType="positionBean">
+		select * from tst_position
+		where is_delete='0'
+		
+		<if test=' position_title != null and position_title != "" '>
+			 and position_title like concat('%',#{position_title},'%') 
+		</if>
+		
+		<if test=' position_type != null and position_type != "" '>
+			 and position_type=#{position_type}
+		</if>
+		
+		<if test=' start_time != null and start_time != "" '>
+			 and start_time >  #{start_time}
+		</if>
+		
+		<if test=' end_time != null and end_time != "" '>
+			 and  #{end_time} > end_time
+		</if>
+		
+		<if test=' position_state != null and position_state != "" '>
+			 and position_state=#{position_state}
+		</if>
+		<if test=' position_apply != null and position_apply != "" '>
+			 and position_apply=#{position_apply}
+		</if>
+		<if test=' material_id != null and material_id != "" '>
+			 and material_id=#{material_id}
+		</if>
+		order by create_time desc
+	
+	</select>
+	<select id="getPosition" parameterType="positionBean" resultType="positionBean">
+		select * from tst_position
+		where is_delete='0' 
+		and position_id = #{position_id}
+	</select>
+	<update id="updatePosition" parameterType="positionBean">
+		update tst_position
+		set update_time=now()
+		<if test=' position_apply != null and position_apply != "" '>
+			 ,position_apply=#{position_apply}
+		</if>
+		<if test=' refuse_desc != null and refuse_desc != "" '>
+			 ,refuse_desc=#{refuse_desc}
+		</if>
+		<if test=' create_time != null and create_time != "" '>
+			 ,create_time=now()
+		</if>
+		where position_id=#{position_id}
+	</update>
+	<select id="getPositionClassNames" parameterType="positionClassesBean" resultType="positionClassBean">
+		select b.* from tst_position_classes  as a
+		inner join tst_position_class as b on a.position_class_id = b.position_class_id
+		and b.is_delete ='0' and a.is_delete ='0'  
+		<if test=' position_id != null and position_id != "" '>
+			 and  a.position_id = #{position_id}
+		</if>
+		<if test=' require_position_id != null and require_position_id != "" '>
+			 and  a.require_position_id = #{require_position_id}
+		</if>
+	</select>
+	
+	<select id="getAdvertiseOrders" parameterType="advertiseOrderBean" resultType="advertiseOrderBean">
+		select * from tst_advertise_order
+		where is_delete='0'
+		<if test=' order_no != null and order_no != "" '>
+			 and order_no like concat('%',#{order_no},'%')
+		</if>
+		
+		<if test=' pay_type != null and pay_type != "" '>
+			 and pay_type=#{pay_type}
+		</if>
+		<if test='order_type != null and order_type != "" '>
+			 and order_type=#{order_type}
+		</if>
+		
+		<if test=' order_state != null and order_state != "" '>
+			 and order_state=#{order_state}
+		</if>
+		
+	</select>
+	<select id="getPositionPersonss" parameterType="positionPersonsBean" resultType="positionPersonsBean">
+		select * from tst_position_persons 
+		where  is_delete='0'
+		<if test=' position_id != null and position_id != "" '>
+			 and  position_id = #{position_id}
+		</if>
+		<if test=' state != null and state != "" '>
+			 and  state = #{state}
+		</if>
+	</select>
+	<select id="getAdvertiseOrder" parameterType="advertiseOrderBean" resultType="advertiseOrderBean">
+		select * from tst_advertise_order
+		where is_delete='0'
+		<if test='order_type != null and order_type != "" '>
+			 and order_type=#{order_type}
+		</if>
+		
+		<if test=' position_id != null and position_id != "" '>
+			 and position_id=#{position_id}
+		</if> 
+		<if test=' advertise_order_id != null and advertise_order_id != "" '>
+			 and advertise_order_id=#{advertise_order_id}
+		</if> 
+		
+	</select>
+	<update id="updateAdvertiseOrder" parameterType="advertiseOrderBean">
+		update tst_advertise_order
+		set update_time=now()
+		
+		<if test=' is_delete != null and is_delete != "" '>
+			 ,is_delete=#{is_delete}
+		</if>
+		
+		<if test=' order_remit != null and order_remit != "" '>
+			 ,order_remit=#{order_remit}
+		</if>
+		<if test=' order_remark != null and order_remark != "" '>
+			 ,order_remark=#{order_remark}
+		</if>
+		where advertise_order_id=#{advertise_order_id}
+	</update>
+
+</mapper>

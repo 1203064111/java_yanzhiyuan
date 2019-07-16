@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.controller.ShopActivityDaoC">
+	
+	
+	<select id="getActivityDetail" parameterType="activityBean" resultType="activityBean">
+		select * from tst_activity
+		where activity_id=#{activity_id}
+	</select>
+	
+	<select id="getActivityGiveGoods" parameterType="activityGiveGoodsBean" resultType="activityGiveGoodsBean">
+		select * from tst_activity_give_goods
+		where activity_id=#{activity_id} and is_delete='0'
+	</select>
+
+	<insert id="insertActivityGiveGoods" parameterType="activityGiveGoodsBean">
+		insert into tst_activity_give_goods
+		(activity_id,goods_id,goods_name,
+		specification_id,specification_names,
+		create_time,update_time)
+		
+		select #{activity_id},a.goods_id,a.goods_name,b.specification_id,
+		b.specification_names,now(),now()
+		 from tst_goods as a
+		inner join tst_goods_relation_specification as b
+		on a.goods_id=b.goods_id and b.is_delete='0'
+		and FIND_IN_SET(b.specification_id,#{specification_id})
+		where a.is_delete='0'
+	</insert>
+	
+	<update id="deleteActivityGiveGoods" parameterType="activityGiveGoodsBean">
+		update tst_activity_give_goods
+		set update_time=now(),
+		is_delete='1'
+		where give_goods_id=#{give_goods_id}
+	</update>
+
+	<select id="getGoodsOutGiveActivity" parameterType="activityGiveGoodsBean" resultType="Map">	
+		select a.merchants_name,a.class_name,
+		a.goods_id,a.sort,a.goods_name,b.specification_id,b.specification_names,b.specification_stock,
+		b.specification_price
+		from tst_goods as a
+		inner join tst_goods_relation_specification as b
+		on a.goods_id=b.goods_id and b.is_delete='0'
+
+		left join tst_activity_give_goods as c
+		on b.goods_id=c.goods_id and b.specification_id=c.specification_id and c.is_delete='0'	
+		and c.activity_id=#{activity_id}
+		
+		where a.is_delete='0' and c.give_goods_id is null
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id=#{merchants_id}
+		</if>
+		<if test=' goods_name != null and goods_name != "" '>
+			and a.goods_name like concat('%',#{goods_name},'%')
+		</if>
+		<if test=' class_name != null and class_name != "" '>
+			and a.class_name like concat('%',#{class_name},'%')
+		</if>
+		order by a.sort desc
+	</select>
+	
+	
+	
+	<select id="getGoodsOutActivity" parameterType="activityGoodsBean" resultType="Map">
+		select a.merchants_name,a.class_name,
+		a.goods_id,a.sort,a.goods_name,b.specification_id,b.specification_names,b.specification_stock,
+		b.specification_price
+		from tst_goods as a
+				inner join tst_goods_relation_specification as b
+				on a.goods_id=b.goods_id and b.is_delete='0'
+		left join tst_activity_goods as c
+		on b.goods_id=c.goods_id and b.specification_id=c.specification_id and c.is_delete='0'
+		and c.activity_id=#{activity_id}	
+		where a.is_delete='0' and c.activity_goods_id is null 
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id=#{merchants_id}
+		</if>
+		<if test=' goods_name != null and goods_name != "" '>
+			and a.goods_name like concat('%',#{goods_name},'%')
+		</if>
+		<if test=' class_name != null and class_name != "" '>
+			and a.class_name like concat('%',#{class_name},'%')
+		</if>
+		
+		order by a.sort desc
+	</select>
+	
+	<insert id="insertActivityGoods" parameterType="activityGoodsBean" useGeneratedKeys="true" keyProperty="activity_goods_id">
+		insert into tst_activity_goods
+		(activity_id,goods_id,goods_name,
+		specification_id,specification_names,
+		activity_price,activity_stock,
+		create_time,update_time)
+		
+		select #{activity_id},a.goods_id,a.goods_name,b.specification_id,
+		b.specification_names,
+		IFNULL(#{activity_price},"0"),IFNULL(#{activity_stock},"0"),
+		now(),now()
+		 from tst_goods as a
+		inner join tst_goods_relation_specification as b
+		on a.goods_id=b.goods_id and b.is_delete='0'
+		and FIND_IN_SET(b.specification_id,#{specification_id})
+		where a.is_delete='0'
+	</insert>
+	
+	<update id="deleteActivityGoods" parameterType="activityGoodsBean">
+		update tst_activity_goods
+		set update_time=now(),
+		is_delete='1'
+		where activity_goods_id=#{activity_goods_id}
+	</update>
+	
+	<select id="getActivityGoodss" parameterType="activityGoodsBean" resultType="activityGoodsBean">
+		select * from tst_activity_goods
+		where is_delete='0' and activity_id=#{activity_id}
+		order by create_time desc
+	</select>
+	
+	<select id="getActivityGoodsDetail" parameterType="activityGoodsBean" resultType="activityGoodsBean">
+		select * from tst_activity_goods
+		where is_delete='0' and goods_id=#{goods_id} and specification_id=#{specification_id}
+		and activity_id=#{activity_id}
+	</select>
+
+	<insert id="insertActivityReduce" parameterType="activityReduceBean" useGeneratedKeys="true" keyProperty="reduce_id">
+		insert into tst_activity_reduce
+		(activity_id,reduce_full_price,reduce_price,
+		create_time,update_time)
+		values
+		(#{activity_id},#{reduce_full_price},#{reduce_price},
+		now(),now())
+	</insert>
+	
+	<update id="updateActivityReduce" parameterType="activityReduceBean">
+		update tst_activity_reduce
+		set update_time=now()
+		<if test=' reduce_full_price != null and reduce_full_price != "" '>
+			,reduce_full_price=#{reduce_full_price}
+		</if>
+		<if test=' reduce_price != null and reduce_price != "" '>
+			,reduce_price=#{reduce_price}
+		</if>
+		
+		where reduce_id=#{reduce_id}
+	</update>
+
+	<insert id="insertActivityGive" parameterType="activityGiveBean" useGeneratedKeys="true" keyProperty="give_id">
+		insert into tst_activity_give
+		(activity_id,give_full_price,give_type,
+		give_integral_value,
+		create_time,update_time)
+		values
+		(#{activity_id},#{give_full_price},#{give_type},
+		#{give_integral_value},
+		now(),now())
+	</insert>
+	
+	<update id="updateActivityGive" parameterType="activityGiveBean">
+		update tst_activity_give
+		set update_time=now()
+		<if test=' give_full_price != null and give_full_price != "" '>
+			,give_full_price=#{give_full_price}
+		</if>
+		<if test=' give_integral_value != null and give_integral_value != "" '>
+			,give_integral_value=#{give_integral_value}
+		</if>
+		
+		where give_id=#{give_id}
+	</update>
+
+
+	<insert id="insertActivity" parameterType="activityBean" useGeneratedKeys="true" keyProperty="activity_id">
+		insert into tst_activity
+		(merchants_id,activity_name,activity_desc,activity_img,activity_type,activity_state,
+		start_time,end_time,create_time,update_time)
+		values
+		(#{merchants_id},#{activity_name},#{activity_desc},#{activity_img},#{activity_type},#{activity_state},
+		#{start_time},#{end_time},now(),now())
+	</insert>
+	
+	<update id="updateActivity" parameterType="activityBean">
+		update tst_activity
+		set update_time=now()
+		<if test=' activity_name != null and activity_name != "" '>
+			,activity_name=#{activity_name}
+		</if>
+		<if test=' activity_desc != null and activity_desc != "" '>
+			,activity_desc=#{activity_desc}
+		</if>
+		<if test=' activity_state != null and activity_state != "" '>
+			,activity_state=#{activity_state}
+		</if>
+		<if test=' activity_img != null and activity_img != "" '>
+			,activity_img=#{activity_img}
+		</if>
+		<if test=' start_time != null and start_time != "" '>
+			,start_time=#{start_time}
+		</if>
+		<if test=' end_time != null and end_time != "" '>
+			,end_time=#{end_time}
+		</if>
+		where activity_id=#{activity_id}
+	</update>
+	
+	<update id="updateActivityState" parameterType="activityBean">
+		update tst_activity
+		set update_time=now()
+		<if test=' activity_state != null and activity_state != "" '>
+			,activity_state=#{activity_state}
+		</if>
+		where activity_id=#{activity_id}
+	</update>
+	
+	<update id="deleteActivity" parameterType="activityBean">
+		update tst_activity
+		set update_time=now(),
+		is_delete='1'
+		where activity_id=#{activity_id}
+	</update>
+	
+	<select id="getActivitys" parameterType="activityBean" resultType="activityBean">
+		select * from tst_activity
+		where is_delete='0'
+		<if test=' activity_type != null and activity_type != "" '>
+			and activity_type=#{activity_type}
+		</if>
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and merchants_id=#{merchants_id}
+		</if>
+		order by create_time desc
+	</select>
+	
+	<insert id="insertActivityDescending" parameterType="activityDescendingBean" useGeneratedKeys="true" keyProperty="descending_id">
+		insert into tst_activity_descending
+		(activity_id,descending_price,
+		create_time,update_time)
+		values
+		(#{activity_id},#{descending_price},
+		now(),now())
+	</insert>
+	
+	<update id="updateActivityDescending" parameterType="activityDescendingBean">
+		update tst_activity_descending
+		set update_time=now()
+		<if test=' descending_price != null and descending_price != "" '>
+			,descending_price=#{descending_price}
+		</if>
+		where descending_id=#{descending_id}
+	</update>
+	
+	
+	<select id="getActivityGiveDetail" parameterType="activityBean" resultMap="activityObject">
+		select a.activity_id,a.activity_name,
+		a.activity_desc,a.activity_img,
+		a.activity_type,a.activity_state,
+		a.start_time,a.end_time,
+		a.is_delete,a.create_time,
+		a.update_time,
+		b.give_id,b.give_full_price,
+		b.give_type,b.give_integral_value
+		
+		from tst_activity as a
+		left join tst_activity_give as b
+		on a.activity_id=b.activity_id and b.is_delete='0'
+		where a.is_delete='0' and a.activity_id=#{activity_id}
+	</select>
+	<select id="getActivityReduceDetail" parameterType="activityBean" resultMap="activityObject">
+		select a.activity_id,a.activity_name,
+		a.activity_desc,a.activity_img,
+		a.activity_type,a.activity_state,
+		a.start_time,a.end_time,
+		a.is_delete,a.create_time,
+		a.update_time,
+		b.reduce_id,b.reduce_full_price,
+		b.reduce_price
+		
+		from tst_activity as a
+		inner join tst_activity_reduce as b
+		on a.activity_id=b.activity_id and b.is_delete='0'
+		where a.is_delete='0' and a.activity_id=#{activity_id}
+	</select>
+	<select id="getActivityDescendingDetail" parameterType="activityBean" resultMap="activityObject">
+		select a.activity_id,a.activity_name,
+		a.activity_desc,a.activity_img,
+		a.activity_type,a.activity_state,
+		a.start_time,a.end_time,
+		a.is_delete,a.create_time,
+		a.update_time,b.descending_id,b.descending_price
+		from tst_activity as a
+		inner join tst_activity_descending as b
+		on a.activity_id=b.activity_id and b.is_delete='0'
+		where a.is_delete='0' and a.activity_id=#{activity_id}
+	</select>
+	
+	<select id="getActivityOneYuanShoppingDetail" parameterType="activityBean" resultMap="activityObject">
+    select a.activity_id,a.activity_name,
+		a.activity_desc,a.activity_img,
+		a.activity_type,a.activity_state,
+		a.start_time,a.end_time,
+		a.is_delete,a.create_time,
+		a.update_time,
+		b.shopping_id,b.activity_people_num,
+		b.activity_people_win,b.activity_price
+		
+		from tst_activity as a
+		inner join tst_activity_shopping as b
+		on a.activity_id=b.activity_id and b.is_delete='0'
+		where a.is_delete='0' and a.activity_id=#{activity_id}
+    </select>
+	
+	<resultMap id="activityObject" type="activityBean"> 
+		<result column="activity_id" property="activity_id"/>
+		<result column="activity_name" property="activity_name"/>
+		<result column="activity_desc" property="activity_desc"/>
+		<result column="activity_img" property="activity_img"/>
+		<result column="activity_type" property="activity_type"/>
+		<result column="activity_state" property="activity_state"/>
+		<result column="start_time" property="start_time"/>
+		<result column="end_time" property="end_time"/>
+		<result column="is_delete" property="is_delete"/>
+		<result column="create_time" property="create_time"/>
+		<result column="update_time" property="update_time"/>
+        <association property="activityGiveBean"  resultMap="activityGiveObject">
+        </association> 
+        <association property="activityReduceBean"  resultMap="activityReduceObject">
+        </association> 
+        <association property="activityDescendingBean"  resultMap="activityDescendingObject">
+        </association> 
+        
+        <association property="activityShoppingBean"  resultMap="activityShoppingObject">
+        </association>   
+        
+    </resultMap>
+    
+    <resultMap id="activityDescendingObject" type="activityDescendingBean">
+    	<result column="descending_id" property="descending_id"/>
+		<result column="descending_price" property="descending_price"/>
+    </resultMap>
+    
+    <resultMap id="activityReduceObject" type="activityReduceBean">
+    	<result column="reduce_id" property="reduce_id"/>
+		<result column="reduce_full_price" property="reduce_full_price"/>
+		<result column="reduce_price" property="reduce_price"/>
+    </resultMap>
+    
+    <resultMap id="activityGiveObject" type="activityGiveBean">
+    	<result column="give_id" property="give_id"/>
+		<result column="give_full_price" property="give_full_price"/>
+		<result column="give_type" property="give_type"/>
+		<result column="give_integral_value" property="give_integral_value"/>
+    </resultMap>
+    
+    <resultMap id="activityShoppingObject" type="activityShoppingBean">
+    	<result column="shopping_id" property="shopping_id"/>
+		<result column="activity_people_num" property="activity_people_num"/>
+		<result column="activity_people_win" property="activity_people_win"/>
+		<result column="activity_price" property="activity_price"/>
+    </resultMap>
+    
+    
+    
+    <update id="updateActivityShopping" parameterType="ActivityShoppingBean">
+    	update tst_activity_shopping
+    	set update_time = now()
+    	
+    	<if test=' activity_people_num != null and activity_people_num != "" '>
+			,activity_people_num = #{activity_people_num}
+		</if>
+		<if test=' activity_people_win != null and activity_people_win != "" '>
+			,activity_people_win = #{activity_people_win}
+		</if>
+		<if test=' activity_price != null and activity_price != "" '>
+			,activity_price = #{activity_price}
+		</if>
+		where shopping_id=#{shopping_id}
+    </update>
+    
+    
+    
+</mapper>

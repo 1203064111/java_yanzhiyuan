@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.ShopCarDao">
+	
+	
+	
+	
+	<select id="getMemberShopCarSum" parameterType="shopCarBean" resultType="int">
+		select case when sum(a.goods_num) is null then 0 else sum(a.goods_num) end as goods_sum from tst_goods_shop_car as a
+		inner join tst_goods as b
+		on a.goods_id=b.goods_id and b.goods_state='1' and b.is_delete='0' and b.apply_state='1'
+		inner join tst_goods_relation_specification as c
+		on a.specification_id=c.specification_id and c.is_delete='0'
+		inner join tst_merchants as d
+		on a.merchants_id=d.merchants_id and d.is_delete='0'
+		where a.is_delete = 0 and a.member_id = #{member_id}
+	</select>
+	
+	<select id="getMerchantsCarsActivitys" parameterType="activityGoodsBean" resultType="activityBean">
+		select b.* from tst_activity_goods as a 
+		inner join tst_activity as b
+		on a.activity_id=b.activity_id and b.is_delete='0' and b.activity_state='1'
+		where FIND_IN_SET(a.goods_id,#{goods_id}) and a.is_delete='0'
+		group by a.activity_id
+	</select>
+
+	<select id="getShopCarDetail" parameterType="shopCarBean" resultType="shopCarBean">
+		select * from tst_goods_shop_car 
+		where is_delete = '0' and member_id=#{member_id} 
+		<if test=' car_id != null and car_id != "" '>
+			and car_id=#{car_id}
+		</if>
+		<if test=' goods_id != null and goods_id != "" '>
+			and goods_id=#{goods_id}
+		</if>
+	</select>
+	
+	<select id="getShopCarsByMerchants" parameterType="shopCarBean" resultType="Map">
+		select a.merchants_id,d.merchants_name from tst_goods_shop_car as a
+		inner join tst_goods as b
+		on a.goods_id=b.goods_id and b.goods_state='1' and b.is_delete='0' and b.apply_state='1'
+		inner join tst_merchants as d
+		on a.merchants_id=d.merchants_id and d.is_delete='0'
+		where a.is_delete = '0' and a.member_id=#{member_id}
+		group by a.merchants_id
+	</select>
+	<select id="getShopCars" parameterType="shopCarBean" resultType="shopCarBean">
+		select a.*,c.merchants_name as merchants_name,c.merchants_img as merchants_img
+		from tst_goods_shop_car as a
+		inner join tst_goods as b
+		on a.goods_id=b.goods_id and b.goods_state='1' and b.is_delete='0'
+		inner join tst_merchants as c 
+		on c.merchants_id = a.merchants_id and c.is_delete = '0'
+		where a.is_delete = '0' and a.member_id=#{member_id}
+		group by a.car_id desc
+	</select>
+	<!-- <select id="getShopCars" parameterType="shopCarBean" resultType="shopCarBean">
+		select a.*
+		from tst_goods_shop_car as a
+		inner join tst_goods as b
+		on a.goods_id=b.goods_id and b.goods_state='1' and b.is_delete='0'
+		where a.is_delete = '0' and a.member_id=#{member_id}
+		<if test=' merchants_id != null and merchants_id != "" '>
+			and a.merchants_id=#{merchants_id}
+		</if>
+	</select> -->
+
+	<insert id="insertShopCar" parameterType="shopCarBean" keyProperty="car_id" useGeneratedKeys="true">
+		INSERT INTO tst_goods_shop_car(member_id,goods_id,goods_name,goods_img,merchants_id,
+		specification_id,specification_ids,specification_names,specification_price,specification_wholesale_price,goods_num,create_time,update_time)
+		VALUES
+		(#{member_id},#{goods_id},#{goods_name},#{goods_img},#{merchants_id},#{specification_id}
+		,#{specification_ids},#{specification_names},#{specification_price},#{specification_wholesale_price},#{goods_num},now(),now())
+	</insert>
+	
+	<update id="updateShopCar" parameterType="shopCarBean">
+		update tst_goods_shop_car
+		set update_time=now(), goods_num=#{goods_num}
+		where 1=1 and car_id=#{car_id} and member_id=#{member_id}
+	</update>
+	
+	<update id="deleteShopCar" parameterType="shopCarBean">
+		update tst_goods_shop_car 
+		set is_delete='1' 
+		where member_id=#{member_id} and car_id=#{car_id}
+		
+	</update>
+	
+	<update id="deleteShopCars" parameterType="shopCarBean">
+		update tst_goods_shop_car
+		set update_time=now(),is_delete='1' 
+		where member_id=#{member_id} and FIND_IN_SET(car_id,#{car_ids})
+	</update>
+	
+</mapper>

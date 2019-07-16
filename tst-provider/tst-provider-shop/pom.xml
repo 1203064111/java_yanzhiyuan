@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>tst</groupId>
+    <artifactId>tst-provider</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>tst-provider-shop</groupId>
+  <artifactId>tst-provider-shop</artifactId>
+  <version>v1.0</version>
+  <packaging>war</packaging>
+  <name>tst-provider-shop Maven Webapp</name>
+  <url>http://maven.apache.org</url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+	
+
+    <dependency>
+			<groupId>tst-interfaces</groupId>
+			<artifactId>tst-interfaces</artifactId>
+			<version>v1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>tst-common</groupId>
+			<artifactId>tst-common</artifactId>
+			<version>v1.0</version>
+		</dependency>
+	
+  </dependencies>
+  
+  <build>
+    <finalName>tst-provider-shop</finalName>  
+    	<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+			</plugin>
+		</plugins>   
+  </build>
+  
+
+  
+</project>

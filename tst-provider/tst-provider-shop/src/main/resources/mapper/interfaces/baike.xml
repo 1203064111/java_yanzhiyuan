@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.BaikeDao">
+
+	
+	<select id="getMerchantsBySearch" parameterType="merchantsBean" resultType="merchantsBean">
+		select a.* from tst_merchants as a 
+	
+		where a.is_delete='0' and a.apply_state = '1'
+		<if test=' merchants_type != null and merchants_type != "" '>
+			and a.merchants_type = #{merchants_type}
+		</if>
+		<if test=' search_key != null and search_key != "" '>
+			and a.merchants_name like concat('%',#{search_key},'%')
+		</if>
+		group by a.merchants_id desc
+		
+	</select>
+	<select id="getGoodsBySearch" parameterType="goodsBean" resultType="goodsBean">
+		select a.* from tst_goods as a 
+		left join tst_goods_tag b on a.goods_id = b.goods_id and b.is_delete = 0
+		where a.is_delete='0'  and a.goods_state='1' and a.goods_type = '1'
+		and a.apply_state='1'
+		<if test=' search_key != null and search_key != "" '>
+			and a.goods_name like concat('%',#{search_key},'%')
+		</if>
+		group by a.goods_id desc
+	</select>
+	
+	<select id="getSearchHots" parameterType="searchHotBean" resultType="searchHotBean">
+		select * from tst_search_hot
+		where is_delete = '0'
+		order by hot_count desc
+		limit 0,8
+	</select>
+	
+	<select id="getMemberSearchs" parameterType="memberSearchBean" resultType="memberSearchBean">
+		select * from tst_member_search
+		where is_delete = '0'
+		<if test=' member_id != null and member_id != "" '>
+			and member_id = #{member_id}
+		</if>
+		order by create_time desc
+		limit 0,5
+	</select>
+	
+	<update id="deleteMemberSearchs" parameterType="memberSearchBean">
+		update   tst_member_search
+		set is_delete = '1'
+		where FIND_IN_SET(search_id,#{search_ids})
+		
+	</update>
+	
+	<select id="getMemberSearchByMemberAndKey" parameterType="memberSearchBean" resultType="memberSearchBean">
+		select * from tst_member_search
+		where is_delete = '0'
+		<if test=' member_id != null and member_id != "" '>
+			and member_id = #{member_id}
+		</if>
+		and search_name = #{search_name}
+		
+	</select>
+	
+	
+	<insert id="insertMemberSearch" parameterType="memberSearchBean">
+		insert into tst_member_search(search_name,member_id,create_time,update_time)
+		values(#{search_name},#{member_id},now(),now())
+	</insert>
+	
+	
+	<select id="getBaikeClasses" parameterType="baikeClassBean" resultType="baikeClassBean">
+		select * from tst_baike_class
+		where is_delete = 0 and class_state = '1'
+		and parent_id = '-1'
+		order by sort asc
+	</select>
+	<select id="getBaikeClassesByParentId" parameterType="baikeClassBean" resultType="baikeClassBean">
+		select * from tst_baike_class
+		where is_delete = 0 and class_state = '1'
+		and parent_id =#{baike_class_id}
+		order by sort asc
+	</select>
+	<select id="getBaikeClassDetail" parameterType="baikeClassBean" resultType="baikeClassBean">
+		select * from tst_baike_class
+		where is_delete = 0 
+		and baike_class_id =#{baike_class_id}
+		
+	</select>
+	
+	
+</mapper>

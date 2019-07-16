@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tst.project.dao.interfaces.OrderRemoteDao">
+
+	<select id="getPercentDetail" parameterType="percentBean" resultType="percentBean">
+		select * from tst_percent
+		where is_delete='0' and percent_type=#{percent_type}
+	</select>
+	
+	
+	<update id="updateShopMemberCouponDetail" parameterType="shopMemberCouponBean">
+		update tst_member_coupon
+		set update_time=now()
+		<if test=' member_coupon_state != null and member_coupon_state != "" '>
+			,member_coupon_state=#{member_coupon_state}
+		</if>
+		where FIND_IN_SET(member_coupon_id,#{coupon_id})
+	</update>
+	
+	<update id="updateShopCouponUsedNum" parameterType="shopMemberCouponBean">
+		update tst_goods_coupon
+		set update_time=now()
+		<if test=' used_num != null and used_num != "" '>
+			,used_num=used_num+#{used_num}
+		</if>
+		where FIND_IN_SET(coupon_id,#{coupon_id})
+	</update>
+	
+	<select id="getShopMemberCoupons" parameterType="shopMemberCouponBean" resultType="shopMemberCouponBean">
+		select * from tst_member_coupon
+		where is_delete='0' and member_id=#{member_id} and coupon_type='1'
+		and coupon_way='2' and coupon_range='1'
+		and member_coupon_state='1'
+		and #{coupon_price}>=coupon_price
+		order by coupon_price desc
+	</select>
+
+	<update id="updateOrder" parameterType="orderBean">
+		update tst_order
+		set update_time=now()
+		<if test=' is_deduction_integral != null and is_deduction_integral != "" '>
+			,is_deduction_integral=#{is_deduction_integral}
+		</if>
+		<if test=' deduction_integral_price != null and deduction_integral_price != "" '>
+			,deduction_integral_price=#{deduction_integral_price}
+		</if>
+		<if test=' deduction_integral_value != null and deduction_integral_value != "" '>
+			,deduction_integral_value=#{deduction_integral_value}
+		</if>
+		<if test="pay_time!=null and pay_time!=''">
+		  ,pay_time=#{pay_time}
+		</if>
+		<if test=' order_price != null and order_price != "" '>
+			,order_price=#{order_price}
+		</if>
+		<if test=' member_coupon_id != null and member_coupon_id != "" '>
+			,member_coupon_id=#{member_coupon_id}
+		</if>
+		<if test=' coupon_id != null and coupon_id != "" '>
+			,coupon_id=#{coupon_id}
+		</if>
+		<if test=' coupon_name != null and coupon_name != "" '>
+			,coupon_name=#{coupon_name}
+		</if>
+		<if test=' coupon_price != null and coupon_price != "" '>
+			,coupon_price=#{coupon_price}
+		</if>
+		<if test=' pay_way != null and pay_way != "" '>
+			,pay_way=#{pay_way}
+		</if>
+		<if test=' pay_charge != null and pay_charge != "" '>
+			,pay_charge=#{pay_charge}
+		</if>
+		<if test=' out_trade_no != null and out_trade_no != "" '>
+			,out_trade_no=#{out_trade_no}
+		</if>
+		where order_id=#{order_id}
+	</update>
+
+	
+	<update id="updateOrderMerchants" parameterType="orderMerchantsBean">
+		update tst_order_merchants
+		set update_time=now()
+		<if test=' is_deduction_integral != null and is_deduction_integral != "" '>
+			,is_deduction_integral=#{is_deduction_integral}
+		</if>
+		<if test=' deduction_integral_price != null and deduction_integral_price != "" '>
+			,deduction_integral_price=#{deduction_integral_price}
+		</if>
+		<if test=' deduction_integral_value != null and deduction_integral_value != "" '>
+			,deduction_integral_value=#{deduction_integral_value}
+		</if>
+		
+		<if test=' order_total_price != null and order_total_price != "" '>
+			,order_total_price=#{order_total_price}
+		</if>
+		<if test=' order_actual_price != null and order_actual_price != "" '>
+			,order_actual_price=#{order_actual_price}
+		</if>
+		<if test=' coupon_price != null and coupon_price != "" '>
+			,coupon_price=#{coupon_price}
+		</if>
+		<if test=' reduce_price != null and reduce_price != "" '>
+			,reduce_price=#{reduce_price}
+		</if>
+		<if test=' freight_price != null and freight_price != "" '>
+			,freight_price=#{freight_price}
+		</if>
+		where order_merchants_id=#{order_merchants_id}
+	</update>
+	
+	<update id="updateOrderGoods" parameterType="orderGoodsBean">
+		update tst_order_goods
+		set update_time=now()
+		<if test=' refund_price != null and refund_price != "" '>
+			,refund_price=#{refund_price}
+		</if>
+		<if test=' freight_way != null and freight_way != "" '>
+			,freight_way=#{freight_way}
+		</if>
+		<if test=' freight_type != null and freight_type != "" '>
+			,freight_type=#{freight_type}
+		</if>
+		<if test=' free_range != null and free_range != "" '>
+			,free_range=#{free_range}
+		</if>
+		<if test=' freight_range != null and freight_range != "" '>
+			,freight_range=#{freight_range}
+		</if>
+		<if test=' freight_price != null and freight_price != "" '>
+			,freight_price=#{freight_price}
+		</if>
+		<if test=' freight_add_range != null and freight_add_range != "" '>
+			,freight_add_range=#{freight_add_range}
+		</if>
+		<if test=' freight_add_price != null and freight_add_price != "" '>
+			,freight_add_price=#{freight_add_price}
+		</if>
+		where order_goods_id=#{order_goods_id}
+	</update>
+	
+	
+	<select id="getGoodsFreightDetail" parameterType="freightCityBean" resultType="Map">
+		select a.freight_id,a.freight_name,a.freight_type,a.freight_way,
+		IFNULL(b.freight_range,a.freight_range)freight_range,IFNULL(b.freight_price,a.freight_price)freight_price,
+		IFNULL(b.freight_add_range,a.freight_add_range)freight_add_range,IFNULL(b.freight_add_price,a.freight_add_price)freight_add_price,
+		c.free_range
+		from tst_freight as a
+		left join tst_freight_city as b
+		on a.freight_id=b.freight_id and b.is_delete='0'
+		and FIND_IN_SET(#{city_names},b.city_names)
+		left join tst_freight_free as c
+		on a.freight_id=c.freight_id and c.is_delete='0'
+		and FIND_IN_SET(#{city_names},c.city_names)
+
+		where a.freight_id=#{freight_id} and a.is_delete='0'
+	</select>
+	
+	<update id="updateGoodsStock" parameterType="goodsBean">
+		update tst_goods
+		set update_time=now(),goods_stock=goods_stock-#{goods_stock}
+		where goods_id=#{goods_id} and (goods_stock-#{goods_stock})>=0
+	</update>
+	
+	<update id="updateGoodsSpecificationStock" parameterType="goodsSpecificationBean">
+		update tst_goods_relation_specification
+		set update_time=now(),specification_stock=specification_stock-#{specification_stock}
+		where specification_id=#{specification_id} and (specification_stock-#{specification_stock})>=0
+	</update>
+	
+	<insert id="insertOrderGoods" parameterType="orderGoodsBean" useGeneratedKeys="true" keyProperty="order_goods_id">
+		insert into tst_order_goods
+		(order_merchants_id,order_id,goods_id,goods_num,goods_name,
+		goods_img,specification_id,specification_ids,specification_names,
+		specification_stock,specification_img,specification_price,specification_cost_price,
+		specification_wholesale_price,goods_actual_price,create_time,update_time,
+		is_descending,activity_price,freight_id,goods_weight,goods_volume,
+		brand_id,brand_name)
+		values
+		(#{order_merchants_id},#{order_id},#{goods_id},#{goods_num},#{goods_name},
+		#{goods_img},#{specification_id},#{specification_ids},#{specification_names},
+		#{specification_stock},#{specification_img},#{specification_price},#{specification_cost_price},
+		#{specification_wholesale_price},#{goods_actual_price},now(),now(),
+		#{is_descending},#{activity_price},#{freight_id},#{goods_weight},#{goods_volume},
+		#{brand_id},#{brand_name})
+	</insert>
+	
+	
+	<select id="getGoodsSpecificationDetail" parameterType="goodsSpecificationBean" resultType="goodsSpecificationBean">
+		select a.* from tst_goods_relation_specification as a
+		where a.is_delete='0' and a.specification_id=#{specification_id}
+	</select>
+	
+	
+	<insert id="insertOrderMerchants" parameterType="orderMerchantsBean" useGeneratedKeys="true" keyProperty="order_merchants_id">
+		insert into tst_order_merchants
+		(order_merchants_no,order_id,order_no,merchants_id,merchants_name,
+		member_id,order_type,order_state,order_remark,
+		create_time,update_time,
+		invoice_id)
+		values
+		(#{order_merchants_no},#{order_id},#{order_no},#{merchants_id},#{merchants_name},
+		#{member_id},#{order_type},#{order_state},#{order_remark},
+		now(),now(),
+		#{invoice_id})
+	</insert>
+	
+	<select id="getMerchantsDetail" parameterType="merchantsBean" resultType="merchantsBean">
+		select * from tst_merchants
+		where merchants_id=#{merchants_id} and is_delete='0'
+	</select>
+
+	<select id="getSceneGoodssGroupMerchants" parameterType="map" resultType="map">
+		select * from(
+			select merchants_id
+			 from tst_goods
+			where is_delete='0' and FIND_IN_SET(goods_id,#{goods_ids}) and FIND_IN_SET(goods_id,#{goods_ids3}) and goods_state='1'
+			union
+			select merchants_id
+			from tst_goods
+			where is_delete='0' and FIND_IN_SET(goods_id,#{goods_ids2}) and FIND_IN_SET(goods_id,#{goods_ids3}) and goods_state='1'
+		)as a
+		group by merchants_id
+	</select>
+	
+	<select id="getSceneGoodss" parameterType="map" resultType="map"> 
+		
+		select a.goods_id,a.goods_name,a.goods_img,a.freight_id,a.goods_weight,a.goods_volume,'2' as type
+		,a.brand_id,b.brand_name
+		from tst_goods as a
+		left join tst_brand as b
+		on a.brand_id=b.brand_id and b.is_delete='0'
+		where a.is_delete='0' and FIND_IN_SET(a.goods_id,#{goods_ids}) and FIND_IN_SET(a.goods_id,#{goods_ids3}) and a.goods_state='1'
+		and a.merchants_id=#{merchants_id}
+		union
+		select a.goods_id,a.goods_name,a.goods_img,a.freight_id,a.goods_weight,a.goods_volume,'1' as type
+		,a.brand_id,b.brand_name
+		from tst_goods as a
+		left join tst_brand as b
+		on a.brand_id=b.brand_id and b.is_delete='0'
+		where a.is_delete='0' and FIND_IN_SET(a.goods_id,#{goods_ids2}) and FIND_IN_SET(a.goods_id,#{goods_ids3}) and a.goods_state='1'
+		and a.merchants_id=#{merchants_id}
+	</select>
+
+	<insert id="insertOrder" parameterType="orderBean" useGeneratedKeys="true" keyProperty="order_id">
+		insert into tst_order
+		(order_no,member_id,order_state
+		,create_time,update_time,
+		pay_end_time)
+		values
+		(#{order_no},#{member_id},#{order_state}
+		,now(),now(),
+		(select ADDDATE(now(),interval percent_value minute) from tst_percent where percent_type='wait_pay' and is_delete='0'))
+	</insert>
+	
+	<insert id="insertOrderAddress" parameterType="orderAddressBean">
+		insert into tst_order_address
+		(order_id,address_id,address_mobile,address_name,
+		address_province,address_city,address_country,
+		address_detailed,address_road,address_zip_code,
+		address_longitude,address_latitude,create_time,update_time)
+		values
+		(#{order_id},#{address_id},#{address_mobile},#{address_name},
+		#{address_province},#{address_city},#{address_country},
+		#{address_detailed},#{address_road},#{address_zip_code},
+		#{address_longitude},#{address_latitude},now(),now())
+	</insert>
+</mapper>
